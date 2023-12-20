@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "833395882705",
+    "project_id": "soocer-223b2",
+    "storage_bucket": "soocer-223b2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:833395882705:android:36e639940385d62e8923f0",
+        "android_client_info": {
+          "package_name": "com.example.soocer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyASWgWn7Ijcb31bLKwxZebvSICNoRa1qic"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
