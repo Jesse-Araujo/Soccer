@@ -2,7 +2,9 @@
 
 package com.example.soocer.componets
 
-import android.util.Log
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -29,17 +31,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.soocer.Screens
+import com.example.soocer.location.LocationService
 
 @Composable
-fun SignInScreen(navController: NavController,
-                 signUiState: SignUiState){
+fun SignInScreen(
+    navController: NavController,
+    signUiState: SignUiState,
+    appContext: Context,
+    startService: (Intent) -> ComponentName?
+){
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -76,7 +81,8 @@ fun SignInScreen(navController: NavController,
                     .fillMaxWidth()
                     .heightIn(48.dp),
                 onClick = {
-                    signViewModel.login(email, password)
+                    //TODO validate input fields
+                    if(email.isNotEmpty() && password.isNotEmpty()) signViewModel.login(email, password)
                     email = ""
                     password = ""
 
@@ -93,6 +99,24 @@ fun SignInScreen(navController: NavController,
                     fontWeight = FontWeight.Bold
                 )
 
+            }
+
+            Button(onClick = {
+                Intent(appContext,LocationService::class.java).apply{
+                    action = LocationService.ACTION_START
+                    startService(this)
+                }
+            }) {
+                Text(text = "Start")
+            }
+
+            Button(onClick = {
+                Intent(appContext,LocationService::class.java).apply{
+                    action = LocationService.ACTION_STOP
+                    startService(this)
+                }
+            }) {
+                Text(text = "Stop")
             }
         }
     }
