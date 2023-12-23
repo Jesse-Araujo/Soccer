@@ -5,9 +5,11 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.location.Location
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.DrawableRes
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.ui.Alignment
@@ -39,6 +41,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.soocer.R
 import com.example.soocer.data.MarkerLocations
 import com.example.soocer.data.Type
+import com.example.soocer.events.Events
 import com.example.soocer.location.DefaultLocationClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.BitmapDescriptor
@@ -56,7 +59,21 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
+@RequiresApi(Build.VERSION_CODES.O)
+fun log(events :List<Events>?) {
+    CoroutineScope(Dispatchers.Main).launch {
+        val resultStringBuilder = StringBuilder()
+        events?.forEach { event ->
+            resultStringBuilder.append(event.toString())
+        }
+        Log.d("events", resultStringBuilder.toString())
+    }
+}
+
+
+@RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("VisibleForTests")
 @Composable
 fun HomeScreen(
@@ -68,9 +85,32 @@ fun HomeScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
+        /*LaunchedEffect(key1 = Unit) {
+            Log.d("called", Events.x)
+
+            // The code inside this block will run only once when the composable is first launched.
+        }*/
+
         val cameraPositionState = rememberCameraPositionState()/*rememberCameraPositionState {
             //position = CameraPosition.fromLatLngZoom(alvalade, 15f)
         }*/
+
+        //Events.getFootballEvents(::log)
+
+        var loading by remember { mutableStateOf(true) }
+        var events by remember { mutableStateOf<List<Events>?>(null) }
+
+        LaunchedEffect(Unit) {
+            // Fetch markers in IO dispatcher
+            Events.getFootballEvents { result ->
+                events = result
+                loading = false
+                Log.d("tenho a info","")
+                log(result)
+            }
+        }
+
+
 
         var currentLocation by remember { mutableStateOf<Location?>(null) }
         val lat: Double = currentLocation?.latitude ?: 0.0
@@ -129,12 +169,24 @@ fun HomeScreen(
                 state = MarkerState(position = LatLng(lat, long)),
                 title = "You are here",
             )
-            for (marker in MarkerLocations.markers) {
+            if (loading) {
+                // Show a loading indicator
+            } else {
+                // Use the events list
+                for (event in events.orEmpty()) {
+                    Log.d("vou meter eventos no mapa",event.markerLocations.title)
+                    CustomMarker(
+                        context = appContext,
+                        place = event.markerLocations
+                    )
+                }
+            }
+            /*for (marker in MarkerLocations.markers) {
                 CustomMarker(
                     context = appContext,
                     place = marker
                 )
-            }
+            }*/
         }
         Box(
             modifier = Modifier.fillMaxSize()
@@ -174,7 +226,7 @@ fun CustomMarker(
     )
     Marker(
         state = MarkerState(position = place.latLng),
-        title = place.location,
+        title = place.title,
         //snippet = "Marker in Lisboa",
         icon = icon
     )
@@ -217,9 +269,11 @@ fun bitmapDescriptorFromVector(
     return BitmapDescriptorFactory.fromBitmap(bm)*/
 }
 
-@Preview
+/*@Preview
 @Composable
 fun HomeScreenPreview() {
     val navController = rememberNavController()
-    HomeScreen(navController, LocalContext.current)
-}
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        HomeScreen(navController, LocalContext.current)
+    }
+}*/
