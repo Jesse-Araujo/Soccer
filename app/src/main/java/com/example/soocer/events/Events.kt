@@ -42,7 +42,8 @@ class Events(
     val homeTeamLogo : String,
     val awayTeam : String,
     val awayTeamLogo : String,
-    val markerLocations: MarkerLocations
+    val markerLocations: MarkerLocations,
+    val importantGame : Boolean
 
 ) {
 
@@ -70,7 +71,7 @@ class Events(
             val season = "2023"
 
             // Replace "YOUR_API_KEY" with your actual API key
-            val apiKey = "api-key"
+            val apiKey = "d0e33784e246dddf42f91ba3633549b8"
 
             // Set up an OkHttpClient
             val client = OkHttpClient()
@@ -132,7 +133,8 @@ class Events(
                     jsonObject1.getJSONObject("teams").getJSONObject("home").getString("logo"),
                     jsonObject1.getJSONObject("teams").getJSONObject("away").getString("name"),
                     jsonObject1.getJSONObject("teams").getJSONObject("away").getString("logo"),
-                    MarkerLocations.getClubStadium(jsonObject1.getJSONObject("teams").getJSONObject("home").getString("name"))
+                    MarkerLocations.getClubStadium(jsonObject1.getJSONObject("teams").getJSONObject("home").getString("name")),
+                    false//TODO implement this
                 )
                 events.add(event)
             }

@@ -82,9 +82,10 @@ fun SignInScreen(
                     .heightIn(48.dp),
                 onClick = {
                     //TODO validate input fields
-                    if(email.isNotEmpty() && password.isNotEmpty()) signViewModel.login(email, password)
+                    if(email.isNotEmpty() && password.isNotEmpty()) //signViewModel.login(email, password)
                     email = ""
                     password = ""
+                    Log.d("bt clicked","")
                     navController.navigate(Screens.Home.route)
                 },
                 contentPadding = PaddingValues(),

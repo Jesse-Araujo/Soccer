@@ -34,7 +34,6 @@ class SignViewModel : ViewModel() {
                 Log.d("LOGIN","${it.localizedMessage}")
 
                 SignUiState.Error
-
             }
     }
 }
