@@ -3,24 +3,20 @@ package com.example.soocer.events
 import android.os.Build
 import androidx.annotation.RequiresApi
 import com.example.soocer.data.MarkerLocations
+import com.example.soocer.weather.Weather
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import java.text.SimpleDateFormat
-import java.util.Calendar
 import java.util.Calendar.*
-import java.util.Locale
 import org.json.JSONArray
 import org.json.JSONObject
-import java.security.Timestamp
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.Date
 
 enum class EventType() {
     FOOTBALL,
@@ -46,6 +42,18 @@ class Events(
     val importantGame : Boolean
 
 ) {
+
+    private var weather: Weather? = null
+
+    fun getWeather() : Weather? {
+        return weather
+    }
+
+    fun setWeather(w :Weather?) {
+        if (w != null) {
+            weather = w
+        }
+    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun toString(): String {
@@ -136,6 +144,7 @@ class Events(
                     MarkerLocations.getClubStadium(jsonObject1.getJSONObject("teams").getJSONObject("home").getString("name")),
                     false//TODO implement this
                 )
+                //Weather.getWeather(event.date,event.markerLocations.latLng.latitude,event.markerLocations.latLng.longitude){event.setWeather(it)}
                 events.add(event)
             }
             val currentDate = LocalDateTime.now()

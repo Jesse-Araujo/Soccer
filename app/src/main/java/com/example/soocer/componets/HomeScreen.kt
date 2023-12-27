@@ -11,10 +11,6 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.DraggableState
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Box
@@ -29,20 +25,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -50,12 +44,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.soocer.R
 import com.example.soocer.data.MarkerLocations
 import com.example.soocer.data.Type
 import com.example.soocer.events.EventType
 import com.example.soocer.events.Events
 import com.example.soocer.location.DefaultLocationClient
+import com.example.soocer.weather.Weather
+import com.example.soocer.weather.WeatherType
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
@@ -166,7 +163,7 @@ fun HomeScreen(
         }
         val e = Events(
             1, EventType.FOOTBALL, "", LocalDateTime.MAX, "", "", "", "", "", "",
-            MarkerLocations("", LatLng(0.0,0.0),Type.STADIUM,1,""), false
+            MarkerLocations("", LatLng(0.0,0.0),Type.STADIUM,1,"",0), false
         )
         val showDialog = remember { mutableStateOf(false) }
         val eventForMarkerWindow = remember { mutableStateOf(e) }
@@ -286,14 +283,16 @@ fun alert(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Box(
-            modifier = Modifier.padding(top = 15.dp)
+            modifier = Modifier
+                .padding(top = 15.dp)
                 .fillMaxWidth(.8f)
                 .fillMaxHeight(.4f)
                 .background(
                     color = Color.White,
                     shape = RoundedCornerShape(35.dp, 35.dp, 35.dp, 35.dp)
-                ).align(Alignment.TopCenter)
-                .clickable { Log.d("click na box","") },//to stop widow from disappear on map drag
+                )
+                .align(Alignment.TopCenter)
+                .clickable { Log.d("click na box", "") },//to stop widow from disappear on map drag
             ) {
             Column(Modifier.fillMaxSize()) {
                 Spacer(
@@ -304,13 +303,13 @@ fun alert(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    //AsyncImage(model = "https://media-4.api-sports.io/football/teams/211.png", contentDescription = "home_logo")
+                    AsyncImage(model = event.homeTeamLogo, contentDescription = "home_logo")
                     Text(
                         text = "${event.homeTeam} vs ${event.awayTeam}",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
-                    //AsyncImage(model = "https://media-4.api-sports.io/football/teams/228.png", contentDescription = "away_logo")
+                    AsyncImage(model = event.awayTeamLogo, contentDescription = "away_logo")
                 }
                 Spacer(
                     modifier = Modifier
@@ -329,7 +328,9 @@ fun alert(
                         modifier = Modifier
                             .padding(10.dp)
                     )
-                    Text(text = "2023/10/10 20:30h", Modifier.padding(top = 5.dp))
+                    var d = event.date.toString().replace("T", " ")
+                    d += "h"
+                    Text(text = d, Modifier.padding(top = 5.dp))
                 }
                 Spacer(
                     modifier = Modifier
@@ -348,7 +349,7 @@ fun alert(
                         modifier = Modifier
                             .size(10.dp)
                     )
-                    Text(text = "Expected 65.000 fans", Modifier.padding(top = 5.dp))
+                    Text(text = "Expected ${event.markerLocations.expectedCapacity} fans", Modifier.padding(top = 5.dp))
                 }
                 Spacer(
                     modifier = Modifier
@@ -358,16 +359,19 @@ fun alert(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
+                    val weather = remember { mutableStateOf(Weather(0.0,WeatherType.ERROR,0.0,0.0)) }
+                    Weather.getWeather(event.date,event.markerLocations.latLng.latitude,event.markerLocations.latLng.longitude,weather)//{event.setWeather(it)}
                     Image(
-                        painter = painterResource(id = R.drawable.cloudy),
-                        contentDescription = "cloudy",
+                        painter = painterResource(id = getWeatherIcon(weather.value.main)),
+                        contentDescription = "weather",
                         modifier = Modifier.size(39.dp)
                     )
                     Spacer(
                         modifier = Modifier
                             .size(10.dp)
                     )
-                    Text(text = "25º C", Modifier.padding(top = 5.dp))
+                    val text = if(weather.value.main != WeatherType.ERROR) "${weather.value.temp} C" else ""
+                    Text(text = text, Modifier.padding(top = 5.dp))
                 }
                 Spacer(
                     modifier = Modifier
@@ -395,6 +399,15 @@ fun alert(
                 }
             }
         }
+    }
+}
+
+fun getWeatherIcon(weatherType: WeatherType) : Int {
+    return when(weatherType) {
+        WeatherType.SUNNY -> R.drawable.sun
+        WeatherType.CLOUDY -> R.drawable.cloudy
+        WeatherType.RAINY -> R.drawable.rainy
+        else -> R.drawable.loading
     }
 }
 
