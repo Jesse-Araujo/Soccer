@@ -77,7 +77,7 @@ class MarkerLocations(
                     getRandomPercentageOfNumber(28250.0)
                 )
 
-                c.contains("vitória") -> MarkerLocations(
+                c.contains("guima") -> MarkerLocations(
                     "Estádio D. Afonso Henriques",
                     LatLng(41.44584900275168, -8.3009939761841),
                     Type.STADIUM,

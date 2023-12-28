@@ -1,11 +1,13 @@
 package com.example.soocer.componets
 
 import android.annotation.SuppressLint
+import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.location.Location
-import android.location.LocationManager
+import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -32,7 +34,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -41,11 +42,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.startActivity
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.soocer.R
@@ -53,6 +54,7 @@ import com.example.soocer.data.MarkerLocations
 import com.example.soocer.data.Type
 import com.example.soocer.events.EventType
 import com.example.soocer.events.Events
+import com.example.soocer.events.OddAPI
 import com.example.soocer.location.DefaultLocationClient
 import com.example.soocer.location.GPSChecker
 import com.example.soocer.weather.Weather
@@ -82,7 +84,9 @@ fun log(events: List<Events>?) {
     CoroutineScope(Dispatchers.Main).launch {
         val resultStringBuilder = StringBuilder()
         events?.forEach { event ->
-            resultStringBuilder.append(event.toString())
+            //resultStringBuilder.append(event.toString())
+            resultStringBuilder.append(event.id)
+            resultStringBuilder.append("\n")
         }
         Log.d("events", resultStringBuilder.toString())
     }
@@ -100,8 +104,7 @@ fun HomeScreen(
             //position = CameraPosition.fromLatLngZoom(alvalade, 15f)
         }*/
     var loading by remember { mutableStateOf(true) }
-    //var events by remember { mutableStateOf<List<Events>?>(null) }
-    var events by remember { mutableStateOf<MutableList<Events>?>(mutableListOf()) }
+    val events by remember { mutableStateOf<MutableList<Events>?>(mutableListOf()) }
     var currentLocation by remember { mutableStateOf<Location?>(null) }
     val gpsIsOnline = remember { mutableStateOf(false) }
     val e = Events(
@@ -229,6 +232,7 @@ fun HomeScreen(
         }
         if (showDialog.value) {
             alert(event = eventForMarkerWindow.value,
+                appContext,
                 onDismiss = { showDialog.value = false })
         }
         Box(
@@ -303,6 +307,7 @@ fun getPlaceImage(eventType: EventType): Int {
 @Composable
 fun alert(
     event: Events,
+    context: Context,
     onDismiss: () -> Unit
 ) {
 
@@ -418,8 +423,17 @@ fun alert(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { //TODO open bet app
+                            openBetclicApp(context)
                         }, horizontalArrangement = Arrangement.Center
                 ) {
+                    val odds = remember { mutableStateOf(Pair("0","0"))}
+                    if(event.homeOdd != "" && event.awayOdd != "") {
+                        Log.d("vou usar as odds guardadas","")
+                        odds.value = Pair(event.homeOdd, event.awayOdd)
+                    } else {
+                        Log.d("vou buscar as odds","")
+                        OddAPI.getFootballOdd(event.id,odds,event)
+                    }
                     Image(
                         painter = painterResource(id = R.drawable.bet),
                         contentDescription = "odds",
@@ -429,7 +443,7 @@ fun alert(
                         modifier = Modifier
                             .size(10.dp)
                     )
-                    Text(text = "Benfica 1.35 - 1.40 Sporting", Modifier.padding(top = 5.dp))
+                    Text(text = "${event.homeTeam} ${odds.value.first} - ${odds.value.second} ${event.awayTeam}", Modifier.padding(top = 5.dp))
                 }
                 Button(onClick = onDismiss/*{ Log.d("Clickey", "")  }*/) {
                     Text(text = "Dismiss")
@@ -564,5 +578,24 @@ fun test() {
     ) {
 
         Text(text = "Turn on GPS", modifier = Modifier.align(Alignment.TopCenter),style = TextStyle(background = Color.Red))
+    }
+}
+
+fun openBetclicApp(context: Context) {
+    val packageName = "sport.android.betclic.pt"
+
+    Intent(Intent.ACTION_MAIN).also {
+        it.`package`=packageName
+        it.addCategory(Intent.CATEGORY_LAUNCHER)
+        try {
+            it.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            context.startActivity(it)
+        } catch (e: ActivityNotFoundException){
+            val playStoreIntent = Intent(Intent.ACTION_VIEW).apply {
+                data = Uri.parse("market://details?id=$packageName")
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            context.startActivity(playStoreIntent)
+        }
     }
 }

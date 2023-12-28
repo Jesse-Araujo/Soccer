@@ -13,9 +13,9 @@ import org.json.JSONObject
 import java.time.LocalDateTime
 
 class HandballAPI {
-    companion object{
+    companion object {
         //@RequiresApi(Build.VERSION_CODES.O)
-        fun getHandballEvents() : List<Events>? {
+        fun getHandballEvents(): List<Events>? {
             val apiUrl = "https://v1.handball.api-sports.io"
             val leagueId = 84
             val season = "2023"
@@ -33,21 +33,6 @@ class HandballAPI {
             val response = client.newCall(request).execute()
             val events = getLeagueGames(response.body?.string())
             return events
-            /*CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    val response = client.newCall(request).execute()
-                    val events = getLeagueGames(response.body?.string())
-                    withContext(Dispatchers.Main) {
-                        onFinished(events)
-                    }
-                } catch (e: Exception) {
-                    withContext(Dispatchers.Main) {
-                        onFinished(null)
-                    }
-                }
-            }*/
-            //val response = client.newCall(request).execute()
-            //println(response.body?.string())
         }
 
         fun getLeagueGames(body: String?): List<Events>? {
@@ -77,7 +62,12 @@ class HandballAPI {
                             jsonObject.getJSONObject("teams").getJSONObject("home")
                                 .getString("name")
                         ),
-                        false//TODO implement this
+                        Events.isBigGame(
+                            jsonObject.getJSONObject("teams").getJSONObject("home")
+                                .getString("name"),
+                            jsonObject.getJSONObject("teams").getJSONObject("away")
+                                .getString("name")
+                        )
                     )
                 } else {
                     return null
@@ -95,4 +85,5 @@ class HandballAPI {
             }
         }
     }
+
 }

@@ -34,26 +34,18 @@ class Events(
     val date: LocalDateTime,
     val city: String,
     val logo: String,
-    val homeTeam : String,
-    val homeTeamLogo : String,
-    val awayTeam : String,
-    val awayTeamLogo : String,
+    val homeTeam: String,
+    val homeTeamLogo: String,
+    val awayTeam: String,
+    val awayTeamLogo: String,
     val markerLocations: MarkerLocations,
-    val importantGame : Boolean
-
+    val importantGame: Boolean,
 ) {
 
-    private var weather: Weather? = null
+    var homeOdd = ""
+    var awayOdd = ""
 
-    fun getWeather() : Weather? {
-        return weather
-    }
 
-    fun setWeather(w :Weather?) {
-        if (w != null) {
-            weather = w
-        }
-    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun toString(): String {
@@ -61,7 +53,7 @@ class Events(
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun convertDateToString(date: LocalDateTime) :String {
+    fun convertDateToString(date: LocalDateTime): String {
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
         return date.format(formatter)
     }
@@ -69,11 +61,10 @@ class Events(
     companion object {
 
 
-
         fun getHandballEvents(onFinished: (List<Events>?) -> Unit) {
             CoroutineScope(Dispatchers.IO).launch {
                 val events = HandballAPI.getHandballEvents()
-                if(events != null) {
+                if (events != null) {
                     withContext(Dispatchers.Main) {
                         onFinished(events)
                     }
@@ -130,7 +121,7 @@ class Events(
         }
 
         @RequiresApi(Build.VERSION_CODES.O)
-        fun createFootballEvents(body: String?) : List<Events>? {
+        fun createFootballEvents(body: String?): List<Events>? {
             val events = mutableListOf<Events>()
             if (body == null) {
                 return null
@@ -144,17 +135,23 @@ class Events(
                     jsonObject1.getJSONObject("fixture").getInt("id"),
                     EventType.FOOTBALL,
                     jsonObject1.getJSONObject("league").getString("name"),
-                    convertTimestampToTime(jsonObject1.getJSONObject("fixture").getLong("timestamp")),
+                    convertTimestampToTime(
+                        jsonObject1.getJSONObject("fixture").getLong("timestamp")
+                    ),
                     jsonObject1.getJSONObject("fixture").getJSONObject("venue").getString("city"),
                     jsonObject1.getJSONObject("league").getString("logo"),
                     jsonObject1.getJSONObject("teams").getJSONObject("home").getString("name"),
                     jsonObject1.getJSONObject("teams").getJSONObject("home").getString("logo"),
                     jsonObject1.getJSONObject("teams").getJSONObject("away").getString("name"),
                     jsonObject1.getJSONObject("teams").getJSONObject("away").getString("logo"),
-                    MarkerLocations.getClubStadium(jsonObject1.getJSONObject("teams").getJSONObject("home").getString("name")),
-                    false//TODO implement this
+                    MarkerLocations.getClubStadium(
+                        jsonObject1.getJSONObject("teams").getJSONObject("home").getString("name")
+                    ),
+                    isBigGame(
+                        jsonObject1.getJSONObject("teams").getJSONObject("home").getString("name"),
+                        jsonObject1.getJSONObject("teams").getJSONObject("away").getString("name")
+                    )
                 )
-                //Weather.getWeather(event.date,event.markerLocations.latLng.latitude,event.markerLocations.latLng.longitude){event.setWeather(it)}
                 events.add(event)
             }
             val currentDate = LocalDateTime.now()
@@ -162,10 +159,29 @@ class Events(
 
             return events.filter { event ->
                 val eventDate = event.date
-                eventDate.isEqual(currentDate) || (eventDate.isAfter(currentDate) && eventDate.isBefore(endDate))
+                eventDate.isEqual(currentDate) || (eventDate.isAfter(currentDate) && eventDate.isBefore(
+                    endDate
+                ))
             }
         }
 
+        fun isBigGame(homeTeam: String, awayTeam: String): Boolean {
+            var team1BigTeam = false
+            var team2BigTeam = false
+            if (homeTeam.contains("benfica") || homeTeam.contains("sporting") || homeTeam.contains("porto") || homeTeam.contains(
+                    "braga"
+                ) || homeTeam.contains("guima")
+            ) {
+                team1BigTeam = true
+            }
+            if (awayTeam.contains("benfica") || awayTeam.contains("sporting") || awayTeam.contains("porto") || awayTeam.contains(
+                    "braga"
+                ) || awayTeam.contains("guima")
+            ) {
+                team2BigTeam = true
+            }
+            return team1BigTeam && team2BigTeam
+        }
 
     }
 }
