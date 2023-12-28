@@ -68,10 +68,20 @@ class Events(
 
     companion object {
 
-        var x = "called"
 
-        //val events = mutableListOf<Events>()
 
+        fun getHandballEvents(onFinished: (List<Events>?) -> Unit) {
+            CoroutineScope(Dispatchers.IO).launch {
+                val events = HandballAPI.getHandballEvents()
+                if(events != null) {
+                    withContext(Dispatchers.Main) {
+                        onFinished(events)
+                    }
+                }
+            }
+        }
+
+        //TODO adicionar champions, liga europa, taça da liga, taça de Portugal
         @RequiresApi(Build.VERSION_CODES.O)
         fun getFootballEvents(onFinished: (List<Events>?) -> Unit) {
             val apiUrl = "https://v3.football.api-sports.io/fixtures"
@@ -113,7 +123,7 @@ class Events(
         }
 
         @RequiresApi(Build.VERSION_CODES.O)
-        private fun convertTimestampToTime(timestamp: Long): LocalDateTime {
+        fun convertTimestampToTime(timestamp: Long): LocalDateTime {
             return Instant.ofEpochSecond(timestamp)
                 .atZone(ZoneId.systemDefault())
                 .toLocalDateTime()

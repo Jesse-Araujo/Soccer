@@ -14,7 +14,7 @@ class MarkerLocations(
     val type: Type,
     val capacity: Int,
     val city: String,
-    val expectedCapacity : Int
+    val expectedCapacity: Int
 ) {
 
 
@@ -201,6 +201,108 @@ class MarkerLocations(
                     50000,
                     "Porto",
                     getRandomPercentageOfNumber(50000.0)
+                )
+            }
+        }
+
+        fun getClubPavilion(club: String): MarkerLocations {
+            val c = club.lowercase()
+            when {
+                c.contains("benfica") -> return MarkerLocations(
+                    "Pavilhão nº2 da Luz",
+                    LatLng(38.75170132955841, -9.18334996464678),
+                    Type.PAVILION,
+                    1800,
+                    "Lisboa",
+                    getRandomPercentageOfNumber(1800.0)
+                )
+                c.contains("sporting") -> return MarkerLocations(
+                    "Pavilhão João Rocha",
+                    LatLng(38.76348, -9.15846),
+                    Type.PAVILION,
+                    3000,
+                    "Lisboa",
+                    getRandomPercentageOfNumber(3000.0)
+                )
+                c.contains("porto") -> return MarkerLocations(
+                    "Dragão Arena",
+                    LatLng(41.16262562453169, -8.581726406850882),
+                    Type.PAVILION,
+                    2200,
+                    "Porto",
+                    getRandomPercentageOfNumber(2200.0)
+                )
+                c.contains("abc") -> return MarkerLocations(
+                    "Pavilhão Flávio Sá Leite",
+                    LatLng(41.53991280563391, -8.419730719663232),
+                    Type.PAVILION,
+                    5000,
+                    "Braga",
+                    getRandomPercentageOfNumber(5000.0)
+                )
+                c.contains("aguas santas") -> return MarkerLocations(
+                    "Pavilhão do Águas Santas",
+                    LatLng(41.20599393333701, -8.565669191726352),
+                    Type.PAVILION,
+                    1000,
+                    "Porto",
+                    getRandomPercentageOfNumber(1000.0)
+                )
+                c.contains("madeira") -> return MarkerLocations(
+                    "Pavilhão do CS Marítimo",
+                    LatLng(32.671795014929955, -16.935586840635324),
+                    Type.PAVILION,
+                    1000,
+                    "Funchal",
+                    getRandomPercentageOfNumber(1000.0)
+                )
+                c == "vitoria" -> return MarkerLocations(
+                    "Pavilhão Antoine Velge",
+                    LatLng(38.53144722350263, -8.889980869201684),
+                    Type.PAVILION,
+                    1200,
+                    "Setúbal",
+                    getRandomPercentageOfNumber(1200.0)
+                )
+                c == "vitoria sc" -> return MarkerLocations(
+                    "Pavilhão Vitória SC",
+                    LatLng(41.44809066106037, -8.280449839504874),
+                    Type.PAVILION,
+                    2500,
+                    "Guimarães",
+                    getRandomPercentageOfNumber(2500.0)
+                )
+                c.contains("belenenses") -> return MarkerLocations(
+                    "Pavilhão Acácio Rosa",
+                    LatLng(38.70150037024289, -9.210051323381323),
+                    Type.PAVILION,
+                    1700,
+                    "Lisboa",
+                    getRandomPercentageOfNumber(1700.0)
+                )
+                c.contains("povoa") -> return MarkerLocations(
+                    "Pavilhão Desportivo Municipal da Póvoa de Varzim",
+                    LatLng(41.389852590723194, -8.761240394769919),
+                    Type.PAVILION,
+                    2500,
+                    "Póvoa de Varzim",
+                    getRandomPercentageOfNumber(2500.0)
+                )
+                c.contains("avanca") -> return MarkerLocations(
+                    "Pavilhão Municipal Comendador Adelino Dias Costa",
+                    LatLng(40.80961425158267, -8.576722114560576),
+                    Type.PAVILION,
+                    5000,
+                    "Avanca",
+                    getRandomPercentageOfNumber(5000.0)
+                )
+                else -> return MarkerLocations(
+                    "Pavilhão Desportivo Municipal de Vila Nova de Gaia",
+                    LatLng(41.11807460945089, -8.59316885960061),
+                    Type.PAVILION,
+                    2000,
+                    "Vila Nova de Gaia",
+                    getRandomPercentageOfNumber(2000.0)
                 )
             }
         }

@@ -5,6 +5,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.location.Location
+import android.location.LocationManager
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -38,7 +39,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -51,6 +54,7 @@ import com.example.soocer.data.Type
 import com.example.soocer.events.EventType
 import com.example.soocer.events.Events
 import com.example.soocer.location.DefaultLocationClient
+import com.example.soocer.location.GPSChecker
 import com.example.soocer.weather.Weather
 import com.example.soocer.weather.WeatherType
 import com.google.android.gms.location.LocationServices
@@ -92,144 +96,164 @@ fun HomeScreen(
     navController: NavController,
     appContext: Context
 ) {
-    Log.d("1º","")
-        var isInitialPositionSet by remember { mutableStateOf(false) }
-        val cameraPositionState = rememberCameraPositionState()/*rememberCameraPositionState {
+    val cameraPositionState = rememberCameraPositionState()/*rememberCameraPositionState {
             //position = CameraPosition.fromLatLngZoom(alvalade, 15f)
         }*/
+    var loading by remember { mutableStateOf(true) }
+    //var events by remember { mutableStateOf<List<Events>?>(null) }
+    var events by remember { mutableStateOf<MutableList<Events>?>(mutableListOf()) }
+    var currentLocation by remember { mutableStateOf<Location?>(null) }
+    val gpsIsOnline = remember { mutableStateOf(false) }
+    val e = Events(
+        1, EventType.FOOTBALL, "", LocalDateTime.MAX, "", "", "", "", "", "",
+        MarkerLocations("", LatLng(0.0, 0.0), Type.STADIUM, 1, "", 0), false
+    )
+    val showDialog = remember { mutableStateOf(false) }
+    val eventForMarkerWindow = remember { mutableStateOf(e) }
+    GPSChecker(appContext) { gpsIsOnline2, loc ->
+       if (gpsIsOnline2) {
+           if(!gpsIsOnline.value) {
+               gpsIsOnline.value = gpsIsOnline2
+               if(loc != null) currentLocation = loc else gpsIsOnline.value = false
+           }else{
+               gpsIsOnline.value = gpsIsOnline2
+           }
+       }else{
+           gpsIsOnline.value = gpsIsOnline2
+       }
 
-        //Events.getFootballEvents(::log)
 
-        var loading by remember { mutableStateOf(true) }
-        var events by remember { mutableStateOf<List<Events>?>(null) }
+    }
 
-        LaunchedEffect(Unit) {
-            Events.getFootballEvents { result ->
-                events = result
-                loading = false
-                Log.d("tenho a info", "")
-                log(result)
-            }
+    LaunchedEffect(Unit) {
+        Events.getFootballEvents { result ->
+            if (result != null) events?.addAll(result)
+            loading = false
+            Log.d("tenho a info de football", "")
+            log(result)
         }
-
-
-        var currentLocation by remember { mutableStateOf<Location?>(null) }
-        val lat: Double = currentLocation?.latitude ?: 0.0
-        val long: Double = currentLocation?.longitude ?: 0.0
-
-        cameraPositionState.position = CameraPosition.fromLatLngZoom(LatLng(lat, long), 15f)
-
-
-        Log.d("voltei","")
-        //if(lat == 0.0 && long == 0.0) Toast.makeText(appContext,"Turn on GPS",Toast.LENGTH_SHORT).show()
-
-        LaunchedEffect(currentLocation) {
-            currentLocation?.let { location ->
-                val latitude = location.latitude
-                val longitude = location.longitude
-                Log.d("Loc", "($latitude, $longitude)")
-            }
+    }
+    LaunchedEffect(Unit) {
+        Events.getHandballEvents { result ->
+            if (result != null) events?.addAll(result)
+            loading = false
+            Log.d("tenho a info de handball", "")
+            log(result)
         }
+    }
 
-        DisposableEffect(Unit) {
-            val locationClient = DefaultLocationClient(
-                appContext,
-                LocationServices.getFusedLocationProviderClient(appContext)
-            )
 
-            /*val locationCallback = object : LocationCallback() {
-                override fun onLocationResult(result: LocationResult) {
-                    result.locations.lastOrNull()?.let { location ->
-                        currentLocation = location
-                    }
-                }
-            }*/
+    val lat: Double = currentLocation?.latitude ?: 0.0
+    val long: Double = currentLocation?.longitude ?: 0.0
 
-            CoroutineScope(Dispatchers.IO).launch {
-                var bol = true
-                locationClient.getLocationUpdates(100L)
-                    .catch { it.printStackTrace() }
-                    .onEach { location ->
-                        // evita que a camera seja puxada para a nossa loc a cada x tempo
-                        if (bol) {
-                            currentLocation = location
-                            bol = false
-                        }
-                    }.launchIn(this)
-            }
+    cameraPositionState.position = CameraPosition.fromLatLngZoom(LatLng(lat, long), 15f)
 
-            onDispose {
-            }
+    LaunchedEffect(currentLocation) {
+        currentLocation?.let { location ->
+            val latitude = location.latitude
+            val longitude = location.longitude
+            //Log.d("Loc", "($latitude, $longitude)")
         }
-        val e = Events(
-            1, EventType.FOOTBALL, "", LocalDateTime.MAX, "", "", "", "", "", "",
-            MarkerLocations("", LatLng(0.0,0.0),Type.STADIUM,1,"",0), false
+    }
+
+    DisposableEffect(Unit) {
+        val locationClient = DefaultLocationClient(
+            appContext,
+            LocationServices.getFusedLocationProviderClient(appContext)
         )
-        val showDialog = remember { mutableStateOf(false) }
-        val eventForMarkerWindow = remember { mutableStateOf(e) }
 
-        Box(Modifier.fillMaxSize()) {
-            if (showDialog.value) cameraPositionState.position = CameraPosition.fromLatLngZoom(eventForMarkerWindow.value.markerLocations.latLng, 15f)
-            if(!showDialog.value && eventForMarkerWindow.value.city != "") cameraPositionState.position = CameraPosition.fromLatLngZoom(eventForMarkerWindow.value.markerLocations.latLng, 15f)
-            GoogleMap(
-                modifier = Modifier
-                    .fillMaxSize(),
-                cameraPositionState = cameraPositionState,
-                onMapClick = {latLng ->
-                    Log.d("camera pos", cameraPositionState.position.target.toString())
-                    //cameraPositionState.position = CameraPosition.fromLatLngZoom(cameraPos.value, 15f)
-                    showDialog.value = false
-                },
-            ) {
-                Log.d("bol " ,cameraPositionState.isMoving.toString())
-                // remove marker window on map drag
-                if(cameraPositionState.cameraMoveStartedReason == CameraMoveStartedReason.GESTURE) showDialog.value = false
-                Marker(
-                    state = MarkerState(position = LatLng(lat, long)),
-                    title = "You are here",
-                )
-                if (loading) {
-                    // Show a loading indicator
-                } else {
-                    for (event in events.orEmpty()) {
-                        //Log.d("vou meter eventos no mapa", event.markerLocations.title)
-                        CustomMarker(
-                            context = appContext,
-                            modifier = Modifier.fillMaxSize(),
-                            event = event,
-                            showDialog,
-                            eventForMarkerWindow,
-                            cameraPositionState
-                        )
-                    }
+        /*val locationCallback = object : LocationCallback() {
+            override fun onLocationResult(result: LocationResult) {
+                result.locations.lastOrNull()?.let { location ->
+                    currentLocation = location
                 }
             }
-            if (showDialog.value) {
-                Log.d("vou mostrar","")
-                alert(event = eventForMarkerWindow.value,
-                    onDismiss = { showDialog.value = false })
-            }
-            Box(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Button(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxHeight(.05f)
-                        .fillMaxWidth(.3f),
-                    onClick = {
-                        cameraPositionState.position = CameraPosition.fromLatLngZoom(LatLng(lat, long), 15f)
-                        showDialog.value = false
+        }*/
+
+        CoroutineScope(Dispatchers.IO).launch {
+            var bol = true
+            locationClient.getLocationUpdates(100L)
+                .catch { it.printStackTrace() }
+                .onEach { location ->
+                    //Log.d("loc", location.toString())
+                    // evita que a camera seja puxada para a nossa loc a cada x tempo
+                    if (bol) {
+                        currentLocation = location
+                        gpsIsOnline.value = true
+                        bol = false
                     }
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_gps_fixed),
-                        contentDescription = "Camera",
-                        modifier = Modifier.size(24.dp) // Adjust size as needed
+                }.launchIn(this)
+        }
+
+        onDispose {
+        }
+    }
+
+
+    Box(Modifier.fillMaxSize()) {
+        if (showDialog.value) cameraPositionState.position =
+            CameraPosition.fromLatLngZoom(eventForMarkerWindow.value.markerLocations.latLng, 15f)
+        if (!showDialog.value && eventForMarkerWindow.value.markerLocations.city != "") cameraPositionState.position =
+            CameraPosition.fromLatLngZoom(eventForMarkerWindow.value.markerLocations.latLng, 15f)
+        GoogleMap(
+            modifier = Modifier
+                .fillMaxSize(),
+            cameraPositionState = cameraPositionState,
+            onMapClick = { latLng ->
+                showDialog.value = false
+            },
+        ) {
+            // remove marker window on map drag
+            if (cameraPositionState.cameraMoveStartedReason == CameraMoveStartedReason.GESTURE) {
+                showDialog.value = false
+            }
+            Marker(
+                state = MarkerState(position = LatLng(lat, long)),
+                title = "You are here",
+            )
+            if (loading) {
+                // Show a loading indicator
+            } else {
+                for (event in events.orEmpty()) {
+                    //Log.d("vou meter eventos no mapa", event.markerLocations.title)
+                    CustomMarker(
+                        context = appContext,
+                        modifier = Modifier.fillMaxSize(),
+                        event = event,
+                        showDialog,
+                        eventForMarkerWindow,
+                        cameraPositionState
                     )
                 }
             }
         }
+        if (showDialog.value) {
+            alert(event = eventForMarkerWindow.value,
+                onDismiss = { showDialog.value = false })
+        }
+        Box(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            if(!gpsIsOnline.value) Text(text = "Turn on GPS", modifier = Modifier.align(Alignment.TopCenter),style = TextStyle(background = Color.Red))
+            Button(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxHeight(.05f)
+                    .fillMaxWidth(.3f),
+                onClick = {
+                    cameraPositionState.position =
+                        CameraPosition.fromLatLngZoom(LatLng(lat, long), 15f)
+                    showDialog.value = false
+                }
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_gps_fixed),
+                    contentDescription = "Camera",
+                    modifier = Modifier.size(24.dp) // Adjust size as needed
+                )
+            }
+        }
+    }
 }
 
 @Composable
@@ -255,7 +279,8 @@ fun CustomMarker(
         icon = icon,
         onClick = {
             eventForMarkerWindow.value = event
-            cameraPositionState.position = CameraPosition.fromLatLngZoom(event.markerLocations.latLng, 15f)
+            cameraPositionState.position =
+                CameraPosition.fromLatLngZoom(event.markerLocations.latLng, 15f)
             showDialog.value = true
             false
         })
@@ -292,8 +317,8 @@ fun alert(
                     shape = RoundedCornerShape(35.dp, 35.dp, 35.dp, 35.dp)
                 )
                 .align(Alignment.TopCenter)
-                .clickable { Log.d("click na box", "") },//to stop widow from disappear on map drag
-            ) {
+                .clickable { Log.d("click na box", "") },//to stop window from disappear on map drag
+        ) {
             Column(Modifier.fillMaxSize()) {
                 Spacer(
                     modifier = Modifier
@@ -349,7 +374,10 @@ fun alert(
                         modifier = Modifier
                             .size(10.dp)
                     )
-                    Text(text = "Expected ${event.markerLocations.expectedCapacity} fans", Modifier.padding(top = 5.dp))
+                    Text(
+                        text = "Expected ${event.markerLocations.expectedCapacity} fans",
+                        Modifier.padding(top = 5.dp)
+                    )
                 }
                 Spacer(
                     modifier = Modifier
@@ -359,8 +387,16 @@ fun alert(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    val weather = remember { mutableStateOf(Weather(0.0,WeatherType.ERROR,0.0,0.0)) }
-                    Weather.getWeather(event.date,event.markerLocations.latLng.latitude,event.markerLocations.latLng.longitude,weather)//{event.setWeather(it)}
+                    val weather =
+                        remember { mutableStateOf(Weather(0.0, WeatherType.ERROR, 0.0, 0.0)) }
+                    if(weather.value.lat == 0.0 && weather.value.lng == 0.0) {
+                        Weather.getWeather(
+                            event.date,
+                            event.markerLocations.latLng.latitude,
+                            event.markerLocations.latLng.longitude,
+                            weather
+                        )
+                    }
                     Image(
                         painter = painterResource(id = getWeatherIcon(weather.value.main)),
                         contentDescription = "weather",
@@ -370,7 +406,8 @@ fun alert(
                         modifier = Modifier
                             .size(10.dp)
                     )
-                    val text = if(weather.value.main != WeatherType.ERROR) "${weather.value.temp} C" else ""
+                    val text =
+                        if (weather.value.main != WeatherType.ERROR) "${weather.value.temp} C" else ""
                     Text(text = text, Modifier.padding(top = 5.dp))
                 }
                 Spacer(
@@ -402,8 +439,8 @@ fun alert(
     }
 }
 
-fun getWeatherIcon(weatherType: WeatherType) : Int {
-    return when(weatherType) {
+fun getWeatherIcon(weatherType: WeatherType): Int {
+    return when (weatherType) {
         WeatherType.SUNNY -> R.drawable.sun
         WeatherType.CLOUDY -> R.drawable.cloudy
         WeatherType.RAINY -> R.drawable.rainy
@@ -517,4 +554,15 @@ fun alert() {
         }
     }
 
+}
+
+@Composable
+@Preview
+fun test() {
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+
+        Text(text = "Turn on GPS", modifier = Modifier.align(Alignment.TopCenter),style = TextStyle(background = Color.Red))
+    }
 }

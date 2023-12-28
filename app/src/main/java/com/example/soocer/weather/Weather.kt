@@ -27,11 +27,10 @@ class Weather(
     val lat: Double,
     val lng: Double,
 ) {
-
-
     companion object {
 
         private val client = OkHttpClient()
+        private val weather : Weather? = null
 
         fun getWeather(
             date: LocalDateTime, lat: Double, lng: Double, uiVar: MutableState<Weather>
@@ -60,7 +59,7 @@ class Weather(
             val request = Request.Builder()
                 .url(url)
                 .build()
-            Log.d("vou chamar a openweathermap para sacar os de hoje","")
+            //Log.d("vou chamar a openweathermap para sacar os de hoje","")
             callAPI(request,0,onFinished)
         }
 
@@ -69,10 +68,12 @@ class Weather(
                 return null
             }
             val output = JSONObject(body)
+            val jsonArray = output.getJSONArray("weather") as JSONArray
+            val jsonObject = jsonArray.getJSONObject(0)
             return Weather(
                 output.getJSONObject("main").getDouble("temp"),
                 changeWeatherDescriptionToWeatherType(
-                    output.getJSONObject("weather").getString("main")
+                    jsonObject.getString("main")
                 ),
                 output.getJSONObject("coord").getDouble("lat"),
                 output.getJSONObject("coord").getDouble("lon")
@@ -119,13 +120,13 @@ class Weather(
                     }
 
                     withContext(Dispatchers.Main) {
-                        Log.d("deu godji",w.toString())
+                        //Log.d("deu godji",w.toString())
                         onFinished.value = w!!
                     }
                 } catch (e: Exception) {
                     withContext(Dispatchers.Main) {
-                        Log.d("deu F",e.printStackTrace().toString())
-                        //onFinished.value = Weather()
+                        //Log.d("deu F",e.printStackTrace().toString())
+                        onFinished.value = Weather(0.0,WeatherType.ERROR,0.0,0.0)
                     }
                 }
             }
@@ -150,11 +151,11 @@ class Weather(
             if (body == null) {
                 return null
             }
-            Log.d("vou chamar a api.tomorrow",body)
+            //Log.d("vou chamar a api.tomorrow",body)
             val output = JSONObject(body)
             val jsonArray = output.getJSONObject("timelines").getJSONArray("daily") as JSONArray
             val jsonObject = jsonArray.getJSONObject(day)
-            Log.d("day -> $day",jsonArray.getJSONObject(day).toString())
+            //Log.d("day -> $day",jsonArray.getJSONObject(day).toString())
             val weatherCode = jsonObject.getJSONObject("values").getInt("weatherCodeMax")
             return Weather(
                 jsonObject.getJSONObject("values").getDouble("temperatureMax"),
