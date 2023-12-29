@@ -46,7 +46,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.startActivity
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.soocer.R
@@ -60,6 +59,7 @@ import com.example.soocer.location.GPSChecker
 import com.example.soocer.weather.Weather
 import com.example.soocer.weather.WeatherType
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
@@ -67,6 +67,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraMoveStartedReason
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerInfoWindow
 import com.google.maps.android.compose.MarkerState
@@ -103,8 +104,11 @@ fun HomeScreen(
     val cameraPositionState = rememberCameraPositionState()/*rememberCameraPositionState {
             //position = CameraPosition.fromLatLngZoom(alvalade, 15f)
         }*/
-    var loading by remember { mutableStateOf(true) }
-    val events by remember { mutableStateOf<MutableList<Events>?>(mutableListOf()) }
+    var footballLoading by remember { mutableStateOf(true) }
+    var handballLoading by remember { mutableStateOf(true) }
+    val allEvents by remember { mutableStateOf<MutableList<Events>?>(mutableListOf()) }
+    val filteredEvents by remember { mutableStateOf<MutableList<Events>?>(mutableListOf()) }
+    //val filteredEvents = remember { mutableStateOf<HashSet<Int>>(hashSetOf()) }
     var currentLocation by remember { mutableStateOf<Location?>(null) }
     val gpsIsOnline = remember { mutableStateOf(false) }
     val e = Events(
@@ -112,36 +116,47 @@ fun HomeScreen(
         MarkerLocations("", LatLng(0.0, 0.0), Type.STADIUM, 1, "", 0), false
     )
     val showDialog = remember { mutableStateOf(false) }
+    val showSearchBar = remember { mutableStateOf(true) }
+    val showSearchBarRecomendations = remember { mutableStateOf(true) }
     val eventForMarkerWindow = remember { mutableStateOf(e) }
     GPSChecker(appContext) { gpsIsOnline2, loc ->
-       if (gpsIsOnline2) {
-           if(!gpsIsOnline.value) {
-               gpsIsOnline.value = gpsIsOnline2
-               if(loc != null) currentLocation = loc else gpsIsOnline.value = false
-           }else{
-               gpsIsOnline.value = gpsIsOnline2
-           }
-       }else{
-           gpsIsOnline.value = gpsIsOnline2
-       }
+        if (gpsIsOnline2) {
+            if (!gpsIsOnline.value) {
+                gpsIsOnline.value = gpsIsOnline2
+                if (loc != null) currentLocation = loc else gpsIsOnline.value = false
+            } else {
+                gpsIsOnline.value = gpsIsOnline2
+            }
+        } else {
+            gpsIsOnline.value = gpsIsOnline2
+        }
 
 
     }
 
     LaunchedEffect(Unit) {
         Events.getFootballEvents { result ->
-            if (result != null) events?.addAll(result)
-            loading = false
+            if (!result.isNullOrEmpty()) {
+                allEvents?.addAll(result)
+                filteredEvents?.addAll(result)
+                //result.forEach { filteredEvents.value.add(it.id) }
+            }
+            footballLoading = false
             Log.d("tenho a info de football", "")
             log(result)
+
         }
     }
     LaunchedEffect(Unit) {
         Events.getHandballEvents { result ->
-            if (result != null) events?.addAll(result)
-            loading = false
+            if (!result.isNullOrEmpty()) {
+                allEvents?.addAll(result)
+                filteredEvents?.addAll(result)
+                //result.forEach { filteredEvents.value.add(it.id) }
+            }
             Log.d("tenho a info de handball", "")
             log(result)
+            handballLoading = false
         }
     }
 
@@ -178,7 +193,6 @@ fun HomeScreen(
             locationClient.getLocationUpdates(100L)
                 .catch { it.printStackTrace() }
                 .onEach { location ->
-                    //Log.d("loc", location.toString())
                     // evita que a camera seja puxada para a nossa loc a cada x tempo
                     if (bol) {
                         currentLocation = location
@@ -203,32 +217,51 @@ fun HomeScreen(
                 .fillMaxSize(),
             cameraPositionState = cameraPositionState,
             onMapClick = { latLng ->
+                showSearchBarRecomendations.value = false
+                showSearchBar.value = true
                 showDialog.value = false
             },
         ) {
             // remove marker window on map drag
             if (cameraPositionState.cameraMoveStartedReason == CameraMoveStartedReason.GESTURE) {
+                showSearchBar.value = true
                 showDialog.value = false
             }
             Marker(
                 state = MarkerState(position = LatLng(lat, long)),
                 title = "You are here",
             )
-            if (loading) {
-                // Show a loading indicator
-            } else {
-                for (event in events.orEmpty()) {
-                    //Log.d("vou meter eventos no mapa", event.markerLocations.title)
+            if (!footballLoading && !handballLoading) {
+                Log.d("vou meter markers no mapa", filteredEvents.toString())
+                filteredEvents?.forEach {
                     CustomMarker(
                         context = appContext,
                         modifier = Modifier.fillMaxSize(),
-                        event = event,
+                        event = it,
                         showDialog,
+                        showSearchBar,
                         eventForMarkerWindow,
                         cameraPositionState
                     )
                 }
+                /*
+                for (event in filteredEvents.orEmpty()/*allEvents.orEmpty()*/) {
+                    //Log.d("vou meter eventos no mapa", event.markerLocations.title)
+                    /*if(filteredEvents.value.contains(event.id)) {
+                        CustomMarker(
+                        context = appContext,
+                        modifier = Modifier.fillMaxSize(),
+                        event = event,
+                        showDialog,
+                        showSearchBar,
+                        eventForMarkerWindow,
+                        cameraPositionState)
+                    }*/
+                }*/
+            } else {
+                Log.d("loading", "")
             }
+
         }
         if (showDialog.value) {
             alert(event = eventForMarkerWindow.value,
@@ -238,7 +271,25 @@ fun HomeScreen(
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
-            if(!gpsIsOnline.value) Text(text = "Turn on GPS", modifier = Modifier.align(Alignment.TopCenter),style = TextStyle(background = Color.Red))
+            Box {
+                AutoComplete(
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    allEvents,
+                    showSearchBar,
+                    showSearchBarRecomendations,
+                    filteredEvents
+                ) {
+                    cameraPositionState.position = CameraPosition.fromLatLngZoom(
+                        cameraPositionState.position.target,
+                        cameraPositionState.position.zoom
+                    )
+                }
+            }
+            if (!gpsIsOnline.value) Text(
+                text = "Turn on GPS",
+                modifier = Modifier.align(Alignment.TopCenter),
+                style = TextStyle(background = Color.Red)
+            )
             Button(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -247,6 +298,7 @@ fun HomeScreen(
                 onClick = {
                     cameraPositionState.position =
                         CameraPosition.fromLatLngZoom(LatLng(lat, long), 15f)
+                    showSearchBar.value = true
                     showDialog.value = false
                 }
             ) {
@@ -266,6 +318,7 @@ fun CustomMarker(
     modifier: Modifier,
     event: Events,
     showDialog: MutableState<Boolean>,
+    showSearchBar: MutableState<Boolean>,
     eventForMarkerWindow: MutableState<Events>,
     cameraPositionState: CameraPositionState,
 ) {
@@ -285,6 +338,7 @@ fun CustomMarker(
             eventForMarkerWindow.value = event
             cameraPositionState.position =
                 CameraPosition.fromLatLngZoom(event.markerLocations.latLng, 15f)
+            showSearchBar.value = false
             showDialog.value = true
             false
         })
@@ -310,7 +364,6 @@ fun alert(
     context: Context,
     onDismiss: () -> Unit
 ) {
-
     Box(modifier = Modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
@@ -394,7 +447,7 @@ fun alert(
                 ) {
                     val weather =
                         remember { mutableStateOf(Weather(0.0, WeatherType.ERROR, 0.0, 0.0)) }
-                    if(weather.value.lat == 0.0 && weather.value.lng == 0.0) {
+                    if (weather.value.lat == 0.0 && weather.value.lng == 0.0) {
                         Weather.getWeather(
                             event.date,
                             event.markerLocations.latLng.latitude,
@@ -426,13 +479,13 @@ fun alert(
                             openBetclicApp(context)
                         }, horizontalArrangement = Arrangement.Center
                 ) {
-                    val odds = remember { mutableStateOf(Pair("0","0"))}
-                    if(event.homeOdd != "" && event.awayOdd != "") {
-                        Log.d("vou usar as odds guardadas","")
+                    val odds = remember { mutableStateOf(Pair("0", "0")) }
+                    if (event.homeOdd != "" && event.awayOdd != "") {
+                        Log.d("vou usar as odds guardadas", "")
                         odds.value = Pair(event.homeOdd, event.awayOdd)
                     } else {
-                        Log.d("vou buscar as odds","")
-                        OddAPI.getFootballOdd(event.id,odds,event)
+                        Log.d("vou buscar as odds", "")
+                        getOddsForEvent(odds, event)
                     }
                     Image(
                         painter = painterResource(id = R.drawable.bet),
@@ -443,12 +496,24 @@ fun alert(
                         modifier = Modifier
                             .size(10.dp)
                     )
-                    Text(text = "${event.homeTeam} ${odds.value.first} - ${odds.value.second} ${event.awayTeam}", Modifier.padding(top = 5.dp))
+                    Text(
+                        text = "${event.homeTeam} ${odds.value.first} - ${odds.value.second} ${event.awayTeam}",
+                        Modifier.padding(top = 5.dp)
+                    )
                 }
                 Button(onClick = onDismiss/*{ Log.d("Clickey", "")  }*/) {
                     Text(text = "Dismiss")
                 }
             }
+        }
+    }
+}
+
+fun getOddsForEvent(odds: MutableState<Pair<String, String>>, event: Events) {
+    when (event.eventType) {
+        EventType.FOOTBALL -> OddAPI.getFootballOdd(event.id, odds, event)
+        else -> {
+            odds.value = Pair("Erro", "Erro")
         }
     }
 }
@@ -577,7 +642,11 @@ fun test() {
         modifier = Modifier.fillMaxSize()
     ) {
 
-        Text(text = "Turn on GPS", modifier = Modifier.align(Alignment.TopCenter),style = TextStyle(background = Color.Red))
+        Text(
+            text = "Turn on GPS",
+            modifier = Modifier.align(Alignment.TopCenter),
+            style = TextStyle(background = Color.Red)
+        )
     }
 }
 
@@ -585,12 +654,12 @@ fun openBetclicApp(context: Context) {
     val packageName = "sport.android.betclic.pt"
 
     Intent(Intent.ACTION_MAIN).also {
-        it.`package`=packageName
+        it.`package` = packageName
         it.addCategory(Intent.CATEGORY_LAUNCHER)
         try {
             it.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             context.startActivity(it)
-        } catch (e: ActivityNotFoundException){
+        } catch (e: ActivityNotFoundException) {
             val playStoreIntent = Intent(Intent.ACTION_VIEW).apply {
                 data = Uri.parse("market://details?id=$packageName")
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
@@ -599,3 +668,4 @@ fun openBetclicApp(context: Context) {
         }
     }
 }
+

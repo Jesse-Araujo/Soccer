@@ -18,13 +18,13 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-enum class EventType() {
-    FOOTBALL,
-    HANDBALL,
-    BASKETBALL,
-    FUTSAL,
-    VOLLEYBALL,
-    HOKEY,
+enum class EventType(val type: String) {
+    FOOTBALL("Football"),
+    HANDBALL("Handball"),
+    BASKETBALL("Basketball"),
+    FUTSAL("Futsal"),
+    VOLLEYBALL("Volleyball"),
+    HOKEY("Hokey"),
 }
 
 class Events(

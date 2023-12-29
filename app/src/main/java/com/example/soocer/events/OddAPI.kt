@@ -1,6 +1,7 @@
 package com.example.soocer.events
 
 import android.os.Build
+import android.util.Log
 import androidx.compose.runtime.MutableState
 import com.example.soocer.data.MarkerLocations
 import kotlinx.coroutines.CoroutineScope
@@ -15,9 +16,9 @@ import java.time.LocalDateTime
 
 class OddAPI {
 
-    companion object{
+    companion object {
 
-        fun getFootballOdd(eventId : Int,uiVal : MutableState<Pair<String,String>>,event: Events) {
+        fun getFootballOdd(eventId: Int, uiVal: MutableState<Pair<String, String>>, event: Events) {
             val apiUrl = "https://v3.football.api-sports.io"
             val season = "2023"
             val bookmaker = 6
@@ -37,28 +38,29 @@ class OddAPI {
             CoroutineScope(Dispatchers.IO).launch {
                 val response = client.newCall(request).execute()
                 val odds = getFootballOdd(response.body?.string())
-                if(odds != null) {
-                    withContext(Dispatchers.Main) {
-                        uiVal.value = odds
-                        event.homeOdd = odds.first
-                        event.awayOdd= odds.second
-                    }
+                withContext(Dispatchers.Main) {
+                    uiVal.value = odds
+                    event.homeOdd = odds.first
+                    event.awayOdd = odds.second
                 }
             }
 
         }
-        fun getFootballOdd(body: String?): Pair<String,String>? {
+
+        fun getFootballOdd(body: String?): Pair<String, String> {
             if (body == null) {
-                return null
+                return Pair("erro", "erro")
             }
+            Log.d("odds", body)
             val output = JSONObject(body)
+            if (output.getInt("results") == 0) return Pair("erro", "erro")
             val jsonArray = output.getJSONArray("response") as JSONArray
             val bookmakers = jsonArray.getJSONObject(0).getJSONArray("bookmakers")
             val bets = bookmakers.getJSONObject(0).getJSONArray("bets")
             val values = bets.getJSONObject(0).getJSONArray("values")
             val homeOdd = values.getJSONObject(0).getString("odd")
             val awayOdd = values.getJSONObject(2).getString("odd")
-            return Pair(homeOdd,awayOdd)
+            return Pair(homeOdd, awayOdd)
         }
     }
 }
