@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toSize
 import com.example.soocer.events.Events
+import com.google.android.gms.maps.model.LatLng
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,7 +45,7 @@ fun AutoComplete(
     showRecommendations: MutableState<Boolean>,
     filteredEvents: MutableList<Events>?,
     //filteredEvents: MutableState<HashSet<Int>>,
-    onFinished: () -> Unit
+    onFinished: (Boolean,LatLng) -> Unit
 ) {
 
     /*val categories = listOf(
@@ -165,7 +166,6 @@ fun AutoComplete(
                             .width(textFieldSize.width.dp),
                         shape = RoundedCornerShape(10.dp)
                     ) {
-
                         LazyColumn(
                             modifier = Modifier.heightIn(max = 150.dp),
                         ) {
@@ -193,7 +193,6 @@ fun AutoComplete(
                                     }
                                 }
                             }
-
                         }
                     }
                 }
@@ -211,7 +210,7 @@ fun CategoryItems(
     events: MutableList<Events>?,
     filteredEvents: MutableList<Events>?,
     //filteredEvents: MutableState<HashSet<Int>>,
-    onFinished:  () -> Unit,
+    onFinished:  (Boolean,LatLng) -> Unit,
     onSelect: (String) -> Unit
 ) {
     Row(
@@ -219,7 +218,7 @@ fun CategoryItems(
             .fillMaxWidth()
             .clickable {
                 onSelect(title)
-                searchEvent(title,events, filteredEvents,onFinished)
+                searchEvent(title, events, filteredEvents, onFinished)
             }
             .padding(10.dp)
     ) {
@@ -227,7 +226,7 @@ fun CategoryItems(
     }
 }
 
-fun searchEvent(title: String, events: MutableList<Events>?,filteredEvents: MutableList<Events>?,/*filteredEvents: MutableState<HashSet<Int>>*/onFinished:  () -> Unit) {
+fun searchEvent(title: String, events: MutableList<Events>?,filteredEvents: MutableList<Events>?,/*filteredEvents: MutableState<HashSet<Int>>*/onFinished:  (Boolean,LatLng) -> Unit) {
     Log.d("vou pesquisar",title)
     //filteredEvents.value.clear()
     filteredEvents?.clear()
@@ -239,39 +238,41 @@ fun searchEvent(title: String, events: MutableList<Events>?,filteredEvents: Muta
     }
 }
 
-fun searchLoc(location : String, events: MutableList<Events>?,filteredEvents: MutableList<Events>?,onFinished:  () -> Unit) {
+fun searchLoc(location : String, events: MutableList<Events>?,filteredEvents: MutableList<Events>?,onFinished:  (Boolean,LatLng) -> Unit) {
     Log.d("vou pesquisar location",location)
     events?.forEach { event ->
         if(event.markerLocations.city == location) filteredEvents?.add(event)//filteredEvents.value?.add(event.id)
     }
     //Log.d("filtered list -> ",filteredEvents.value?.size.toString())
-    onFinished()
+    onFinished(false, LatLng(0.0,0.0))
 }
 
-fun searchClub(club: String, events: MutableList<Events>?,filteredEvents: MutableList<Events>?,onFinished:  () -> Unit) {
+fun searchClub(club: String, events: MutableList<Events>?,filteredEvents: MutableList<Events>?,onFinished:  (Boolean,LatLng) -> Unit) {
     Log.d("vou pesquisar club",club)
     events?.forEach { event ->
         if(event.homeTeam == club || event.awayTeam == club) filteredEvents?.add(event)//filteredEvents.value?.add(event.id)
     }
-    onFinished()
-    //Log.d("filtered list -> ",filteredEvents.value?.size.toString())
+    onFinished(false,LatLng(0.0,0.0))
 }
 
-fun searchSport(sport: String, events: MutableList<Events>?,filteredEvents: MutableList<Events>?,onFinished:  () -> Unit) {
+fun searchSport(sport: String, events: MutableList<Events>?,filteredEvents: MutableList<Events>?,onFinished:  (Boolean,LatLng) -> Unit) {
     Log.d("vou pesquisar sport",sport)
     events?.forEach { event ->
         if(event.eventType.toString() == sport) filteredEvents?.add(event)//filteredEvents.value?.add(event.id)
     }
-    onFinished()
-    //Log.d("filtered list -> ",filteredEvents.value?.size.toString())
+    onFinished(false,LatLng(0.0,0.0))
 }
 
-fun searchPlace(place : String, events: MutableList<Events>?,filteredEvents: MutableList<Events>?,onFinished:  () -> Unit) {
-    Log.d("vou pesquisar place",place)
+fun searchPlace(place : String, events: MutableList<Events>?,filteredEvents: MutableList<Events>?,onFinished:  (Boolean,LatLng) -> Unit) {
+    var loc : LatLng? = null
     events?.forEach { event ->
-        if(event.markerLocations.title == place) filteredEvents?.add(event)//filteredEvents.value?.add(event.id)
+        if(event.markerLocations.title == place) {
+            filteredEvents?.add(event)
+            loc = event.markerLocations . latLng
+        }
     }
-    onFinished()
+    if(loc == null) onFinished(false,LatLng(0.0,0.0)) else onFinished(true,loc!!)
+
     //Log.d("filtered list -> ",filteredEvents.value?.size.toString())
 }
 

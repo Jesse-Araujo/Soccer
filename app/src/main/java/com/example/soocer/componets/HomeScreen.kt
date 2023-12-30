@@ -25,6 +25,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -59,7 +61,6 @@ import com.example.soocer.location.GPSChecker
 import com.example.soocer.weather.Weather
 import com.example.soocer.weather.WeatherType
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
@@ -67,7 +68,6 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraMoveStartedReason
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerInfoWindow
 import com.google.maps.android.compose.MarkerState
@@ -85,11 +85,9 @@ fun log(events: List<Events>?) {
     CoroutineScope(Dispatchers.Main).launch {
         val resultStringBuilder = StringBuilder()
         events?.forEach { event ->
-            //resultStringBuilder.append(event.toString())
-            resultStringBuilder.append(event.id)
-            resultStringBuilder.append("\n")
+            resultStringBuilder.append(event.toString())
         }
-        Log.d("events", resultStringBuilder.toString())
+        Log.d("events from api", resultStringBuilder.toString())
     }
 }
 
@@ -113,12 +111,15 @@ fun HomeScreen(
     val gpsIsOnline = remember { mutableStateOf(false) }
     val e = Events(
         1, EventType.FOOTBALL, "", LocalDateTime.MAX, "", "", "", "", "", "",
-        MarkerLocations("", LatLng(0.0, 0.0), Type.STADIUM, 1, "", 0), false
+        MarkerLocations("", LatLng(0.0, 0.0), Type.STADIUM, 1, "", 0, hashSetOf()), false
     )
     val showDialog = remember { mutableStateOf(false) }
     val showSearchBar = remember { mutableStateOf(true) }
     val showSearchBarRecomendations = remember { mutableStateOf(true) }
-    val eventForMarkerWindow = remember { mutableStateOf(e) }
+    val currentMarker = remember { mutableStateOf<MarkerLocations?>(null) }
+    val eventsForMarkerWindow = remember { mutableStateOf<MutableList<Events>>(mutableListOf()) }
+    val markers by remember { mutableStateOf<MutableList<MarkerLocations>>(mutableListOf()) }
+    val existingMarkers by remember { mutableStateOf<HashMap<String, MarkerLocations>>(hashMapOf()) }
     GPSChecker(appContext) { gpsIsOnline2, loc ->
         if (gpsIsOnline2) {
             if (!gpsIsOnline.value) {
@@ -135,29 +136,39 @@ fun HomeScreen(
     }
 
     LaunchedEffect(Unit) {
-        Events.getFootballEvents { result ->
-            if (!result.isNullOrEmpty()) {
-                allEvents?.addAll(result)
-                filteredEvents?.addAll(result)
-                //result.forEach { filteredEvents.value.add(it.id) }
+        if (Events.events.isEmpty()) {
+            Events.getFootballEvents { result ->
+                if (!result.isNullOrEmpty()) {
+                    Events.events.addAll(result)
+                    allEvents?.addAll(result)
+                    filteredEvents?.addAll(result)
+                    //result.forEach { filteredEvents.value.add(it.id) }
+                }
+                footballLoading = false
+                log(result)
             }
+        } else {
+            allEvents?.addAll(Events.events)
+            filteredEvents?.addAll(Events.events)
             footballLoading = false
-            Log.d("tenho a info de football", "")
-            log(result)
-
         }
+
     }
     LaunchedEffect(Unit) {
-        Events.getHandballEvents { result ->
-            if (!result.isNullOrEmpty()) {
-                allEvents?.addAll(result)
-                filteredEvents?.addAll(result)
-                //result.forEach { filteredEvents.value.add(it.id) }
+        if (Events.events.isEmpty()) {
+            Events.getHandballEvents { result ->
+                if (!result.isNullOrEmpty()) {
+                    Events.events.addAll(result)
+                    allEvents?.addAll(result)
+                    filteredEvents?.addAll(result)
+                    //result.forEach { filteredEvents.value.add(it.id) }
+                }
+                Log.d("tenho a info de handball", "")
+                log(result)
+                handballLoading = false
             }
-            Log.d("tenho a info de handball", "")
-            log(result)
-            handballLoading = false
-        }
+        } else handballLoading = false
+
     }
 
 
@@ -209,9 +220,15 @@ fun HomeScreen(
 
     Box(Modifier.fillMaxSize()) {
         if (showDialog.value) cameraPositionState.position =
-            CameraPosition.fromLatLngZoom(eventForMarkerWindow.value.markerLocations.latLng, 15f)
-        if (!showDialog.value && eventForMarkerWindow.value.markerLocations.city != "") cameraPositionState.position =
-            CameraPosition.fromLatLngZoom(eventForMarkerWindow.value.markerLocations.latLng, 15f)
+            CameraPosition.fromLatLngZoom(
+                eventsForMarkerWindow.value[0].markerLocations.latLng,
+                15f
+            )
+        if (!showDialog.value && currentMarker.value != null) cameraPositionState.position =
+            CameraPosition.fromLatLngZoom(
+                eventsForMarkerWindow.value[0].markerLocations.latLng,
+                15f
+            )
         GoogleMap(
             modifier = Modifier
                 .fillMaxSize(),
@@ -220,12 +237,16 @@ fun HomeScreen(
                 showSearchBarRecomendations.value = false
                 showSearchBar.value = true
                 showDialog.value = false
+                //eventsForMarkerWindow.value = mutableListOf()
+                //currentMarker.value = null
             },
         ) {
             // remove marker window on map drag
             if (cameraPositionState.cameraMoveStartedReason == CameraMoveStartedReason.GESTURE) {
                 showSearchBar.value = true
                 showDialog.value = false
+                //eventsForMarkerWindow.value = mutableListOf()
+                //currentMarker.value = null
             }
             Marker(
                 state = MarkerState(position = LatLng(lat, long)),
@@ -233,7 +254,38 @@ fun HomeScreen(
             )
             if (!footballLoading && !handballLoading) {
                 Log.d("vou meter markers no mapa", filteredEvents.toString())
+                markers.clear()
+                existingMarkers.clear()
                 filteredEvents?.forEach {
+                    val marker = it.markerLocations
+                    val key = "${marker.latLng.latitude} | ${marker.latLng.longitude}"
+                    if (existingMarkers.contains(key)) {
+                        val markerValue = existingMarkers.get(key)
+                        markerValue?.events?.add(it)
+                        if (markerValue != null) {
+                            existingMarkers.put(key, markerValue)
+                        }
+                    } else {
+                        if (it.markerLocations.events.isEmpty()) it.markerLocations.events.add(it)
+                        existingMarkers.put(key, it.markerLocations)
+                    }
+                }
+
+                existingMarkers.values.toList().forEach {
+                    Log.d("eventos do marker", it.events.toString())
+                    CustomMarker(
+                        context = appContext,
+                        modifier = Modifier.fillMaxSize(),
+                        marker = it,
+                        showDialog,
+                        showSearchBar,
+                        currentMarker,
+                        //eventForMarkerWindow,
+                        eventsForMarkerWindow,
+                        cameraPositionState
+                    )
+                }
+                /*filteredEvents?.forEach {
                     CustomMarker(
                         context = appContext,
                         modifier = Modifier.fillMaxSize(),
@@ -243,20 +295,6 @@ fun HomeScreen(
                         eventForMarkerWindow,
                         cameraPositionState
                     )
-                }
-                /*
-                for (event in filteredEvents.orEmpty()/*allEvents.orEmpty()*/) {
-                    //Log.d("vou meter eventos no mapa", event.markerLocations.title)
-                    /*if(filteredEvents.value.contains(event.id)) {
-                        CustomMarker(
-                        context = appContext,
-                        modifier = Modifier.fillMaxSize(),
-                        event = event,
-                        showDialog,
-                        showSearchBar,
-                        eventForMarkerWindow,
-                        cameraPositionState)
-                    }*/
                 }*/
             } else {
                 Log.d("loading", "")
@@ -264,9 +302,14 @@ fun HomeScreen(
 
         }
         if (showDialog.value) {
-            alert(event = eventForMarkerWindow.value,
-                appContext,
-                onDismiss = { showDialog.value = false })
+            if (eventsForMarkerWindow.value.size > 1) {
+                ShowEventList(appContext,eventsForMarkerWindow)
+            } else {
+                alert(event = eventsForMarkerWindow.value[0],
+                    appContext,
+                    onDismiss = { showDialog.value = false })
+                //eventsForMarkerWindow.value = mutableListOf()
+            }
         }
         Box(
             modifier = Modifier.fillMaxSize()
@@ -278,11 +321,18 @@ fun HomeScreen(
                     showSearchBar,
                     showSearchBarRecomendations,
                     filteredEvents
-                ) {
-                    cameraPositionState.position = CameraPosition.fromLatLngZoom(
-                        cameraPositionState.position.target,
-                        cameraPositionState.position.zoom
-                    )
+                ) { bol,loc ->
+                    if(bol) {
+                        cameraPositionState.position = CameraPosition.fromLatLngZoom(
+                            loc,
+                            15f
+                        )
+                    } else {
+                        cameraPositionState.position = CameraPosition.fromLatLngZoom(
+                            cameraPositionState.position.target,
+                            cameraPositionState.position.zoom
+                        )
+                    }
                 }
             }
             if (!gpsIsOnline.value) Text(
@@ -305,209 +355,28 @@ fun HomeScreen(
                 Image(
                     painter = painterResource(id = R.drawable.ic_gps_fixed),
                     contentDescription = "Camera",
-                    modifier = Modifier.size(24.dp) // Adjust size as needed
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }
     }
 }
 
-@Composable
-fun CustomMarker(
-    context: Context,
-    modifier: Modifier,
-    event: Events,
-    showDialog: MutableState<Boolean>,
-    showSearchBar: MutableState<Boolean>,
-    eventForMarkerWindow: MutableState<Events>,
-    cameraPositionState: CameraPositionState,
-) {
-    val iconResourceId = when (event.markerLocations.type) {
-        Type.STADIUM -> R.drawable.stadium
-        else -> R.drawable.pavilion
-    }
-    val icon = bitmapDescriptorFromVector(
-        context, iconResourceId, 100, 75
-    )
-    MarkerInfoWindow(
-        state = MarkerState(position = event.markerLocations.latLng),
-        title = event.markerLocations.title, //TODO make this disappear when the window is closed
-        //snippet = "Marker in Lisboa",
-        icon = icon,
-        onClick = {
-            eventForMarkerWindow.value = event
-            cameraPositionState.position =
-                CameraPosition.fromLatLngZoom(event.markerLocations.latLng, 15f)
-            showSearchBar.value = false
-            showDialog.value = true
-            false
-        })
-}
-
 fun getImage(eventType: EventType): Int {
     return when (eventType) {
         EventType.FOOTBALL -> R.drawable.football_img
-        else -> R.drawable.football_img
+        else -> R.drawable.handball_img
     }
 }
 
 fun getPlaceImage(eventType: EventType): Int {
     return when (eventType) {
         EventType.FOOTBALL -> R.drawable.stadium
-        else -> R.drawable.stadium
+        else -> R.drawable.pavilion
     }
 }
 
-@Composable
-fun alert(
-    event: Events,
-    context: Context,
-    onDismiss: () -> Unit
-) {
-    Box(modifier = Modifier.fillMaxSize()) {
-        Box(
-            modifier = Modifier
-                .padding(top = 15.dp)
-                .fillMaxWidth(.8f)
-                .fillMaxHeight(.4f)
-                .background(
-                    color = Color.White,
-                    shape = RoundedCornerShape(35.dp, 35.dp, 35.dp, 35.dp)
-                )
-                .align(Alignment.TopCenter)
-                .clickable { Log.d("click na box", "") },//to stop window from disappear on map drag
-        ) {
-            Column(Modifier.fillMaxSize()) {
-                Spacer(
-                    modifier = Modifier
-                        .size(10.dp)
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    AsyncImage(model = event.homeTeamLogo, contentDescription = "home_logo")
-                    Text(
-                        text = "${event.homeTeam} vs ${event.awayTeam}",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    AsyncImage(model = event.awayTeamLogo, contentDescription = "away_logo")
-                }
-                Spacer(
-                    modifier = Modifier
-                        .size(10.dp)
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Image(
-                        painter = painterResource(id = getImage(event.eventType)),
-                        contentDescription = "icon",
-                        modifier = Modifier.size(39.dp)
-                    )
-                    Spacer(
-                        modifier = Modifier
-                            .padding(10.dp)
-                    )
-                    var d = event.date.toString().replace("T", " ")
-                    d += "h"
-                    Text(text = d, Modifier.padding(top = 5.dp))
-                }
-                Spacer(
-                    modifier = Modifier
-                        .size(10.dp)
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Image(
-                        painter = painterResource(id = getPlaceImage(event.eventType)),
-                        contentDescription = "stadium_c",
-                        modifier = Modifier.size(39.dp)
-                    )
-                    Spacer(
-                        modifier = Modifier
-                            .size(10.dp)
-                    )
-                    Text(
-                        text = "Expected ${event.markerLocations.expectedCapacity} fans",
-                        Modifier.padding(top = 5.dp)
-                    )
-                }
-                Spacer(
-                    modifier = Modifier
-                        .size(10.dp)
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    val weather =
-                        remember { mutableStateOf(Weather(0.0, WeatherType.ERROR, 0.0, 0.0)) }
-                    if (weather.value.lat == 0.0 && weather.value.lng == 0.0) {
-                        Weather.getWeather(
-                            event.date,
-                            event.markerLocations.latLng.latitude,
-                            event.markerLocations.latLng.longitude,
-                            weather
-                        )
-                    }
-                    Image(
-                        painter = painterResource(id = getWeatherIcon(weather.value.main)),
-                        contentDescription = "weather",
-                        modifier = Modifier.size(39.dp)
-                    )
-                    Spacer(
-                        modifier = Modifier
-                            .size(10.dp)
-                    )
-                    val text =
-                        if (weather.value.main != WeatherType.ERROR) "${weather.value.temp} C" else ""
-                    Text(text = text, Modifier.padding(top = 5.dp))
-                }
-                Spacer(
-                    modifier = Modifier
-                        .size(10.dp)
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { //TODO open bet app
-                            openBetclicApp(context)
-                        }, horizontalArrangement = Arrangement.Center
-                ) {
-                    val odds = remember { mutableStateOf(Pair("0", "0")) }
-                    if (event.homeOdd != "" && event.awayOdd != "") {
-                        Log.d("vou usar as odds guardadas", "")
-                        odds.value = Pair(event.homeOdd, event.awayOdd)
-                    } else {
-                        Log.d("vou buscar as odds", "")
-                        getOddsForEvent(odds, event)
-                    }
-                    Image(
-                        painter = painterResource(id = R.drawable.bet),
-                        contentDescription = "odds",
-                        modifier = Modifier.size(39.dp)
-                    )
-                    Spacer(
-                        modifier = Modifier
-                            .size(10.dp)
-                    )
-                    Text(
-                        text = "${event.homeTeam} ${odds.value.first} - ${odds.value.second} ${event.awayTeam}",
-                        Modifier.padding(top = 5.dp)
-                    )
-                }
-                Button(onClick = onDismiss/*{ Log.d("Clickey", "")  }*/) {
-                    Text(text = "Dismiss")
-                }
-            }
-        }
-    }
-}
+
 
 fun getOddsForEvent(odds: MutableState<Pair<String, String>>, event: Events) {
     when (event.eventType) {
@@ -544,7 +413,7 @@ fun bitmapDescriptorFromVector(
 
     return BitmapDescriptorFactory.fromBitmap(bm)
 }
-
+/*
 @Preview
 @Composable
 fun alert() {
@@ -632,7 +501,6 @@ fun alert() {
 
         }
     }
-
 }
 
 @Composable
@@ -649,7 +517,7 @@ fun test() {
         )
     }
 }
-
+*/
 fun openBetclicApp(context: Context) {
     val packageName = "sport.android.betclic.pt"
 

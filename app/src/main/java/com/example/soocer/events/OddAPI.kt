@@ -1,9 +1,7 @@
 package com.example.soocer.events
 
-import android.os.Build
 import android.util.Log
 import androidx.compose.runtime.MutableState
-import com.example.soocer.data.MarkerLocations
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -12,7 +10,6 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONArray
 import org.json.JSONObject
-import java.time.LocalDateTime
 
 class OddAPI {
 
@@ -26,8 +23,6 @@ class OddAPI {
             val apiKey = "d0e33784e246dddf42f91ba3633549b8"
 
             val client = OkHttpClient()
-
-            //conn.request("GET", "season=2019&bet=1&bookmaker=6&fixture=157140&league=39", headers=headers)
 
             val request = Request.Builder()
                 .url("$apiUrl/odds?fixture=$eventId&bookmaker=$bookmaker&season=$season")

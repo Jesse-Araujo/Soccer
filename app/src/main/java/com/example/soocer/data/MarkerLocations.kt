@@ -1,5 +1,6 @@
 package com.example.soocer.data
 
+import com.example.soocer.events.Events
 import com.google.android.gms.maps.model.LatLng
 import kotlin.random.Random
 
@@ -10,11 +11,13 @@ enum class Type() {
 
 class MarkerLocations(
     val title: String,
-    val latLng: LatLng,
+    var latLng: LatLng,
     val type: Type,
     val capacity: Int,
     val city: String,
-    val expectedCapacity: Int
+    val expectedCapacity: Int,
+    val events : HashSet<Events>
+    //val events : MutableList<Events>
 ) {
 
 
@@ -47,7 +50,7 @@ class MarkerLocations(
             return when {
                 c.contains("benfica") -> MarkerLocations(
                     "Estádio da Luz", LatLng(38.752663, -9.184720), Type.STADIUM, 65000, "Lisboa",
-                    getRandomPercentageOfNumber(65000.0)
+                    getRandomPercentageOfNumber(65000.0), hashSetOf()
                 )
 
                 c.contains("braga") -> MarkerLocations(
@@ -56,7 +59,7 @@ class MarkerLocations(
                     Type.STADIUM,
                     30000,
                     "Braga",
-                    getRandomPercentageOfNumber(30000.0)
+                    getRandomPercentageOfNumber(30000.0), hashSetOf()//mutableListOf()
                 )
 
                 c.contains("sporting") -> MarkerLocations(
@@ -65,7 +68,7 @@ class MarkerLocations(
                     Type.STADIUM,
                     50000,
                     "Lisboa",
-                    getRandomPercentageOfNumber(50000.0)
+                    getRandomPercentageOfNumber(50000.0), hashSetOf()//mutableListOf()
                 )
 
                 c.contains("boavista") -> MarkerLocations(
@@ -74,7 +77,7 @@ class MarkerLocations(
                     Type.STADIUM,
                     28250,
                     "Porto",
-                    getRandomPercentageOfNumber(28250.0)
+                    getRandomPercentageOfNumber(28250.0), hashSetOf()//mutableListOf()
                 )
 
                 c.contains("guima") -> MarkerLocations(
@@ -83,7 +86,7 @@ class MarkerLocations(
                     Type.STADIUM,
                     30000,
                     "Guimarães",
-                    getRandomPercentageOfNumber(30000.0)
+                    getRandomPercentageOfNumber(30000.0), hashSetOf()//mutableListOf()
                 )
 
                 c.contains("moreirense") -> MarkerLocations(
@@ -92,7 +95,7 @@ class MarkerLocations(
                     Type.STADIUM,
                     6150,
                     "Braga",
-                    getRandomPercentageOfNumber(6150.0)
+                    getRandomPercentageOfNumber(6150.0), hashSetOf()//mutableListOf()
                 )
 
                 c.contains("farense") -> MarkerLocations(
@@ -101,16 +104,16 @@ class MarkerLocations(
                     Type.STADIUM,
                     7000,
                     "Braga",
-                    getRandomPercentageOfNumber(7000.0)
+                    getRandomPercentageOfNumber(7000.0), hashSetOf()//mutableListOf()
                 )
 
-                c.contains("famalicão") -> MarkerLocations(
+                c.contains("famalicao") -> MarkerLocations(
                     "Estádio Municipal 22 de Junho",
                     LatLng(41.40134499011872, -8.52247611851562),
                     Type.STADIUM,
                     5300,
                     "Famalicão",
-                    getRandomPercentageOfNumber(5300.0)
+                    getRandomPercentageOfNumber(5300.0), hashSetOf()//mutableListOf()
                 )
 
                 c.contains("estrela") -> MarkerLocations(
@@ -119,7 +122,7 @@ class MarkerLocations(
                     Type.STADIUM,
                     9300,
                     "Lisboa",
-                    getRandomPercentageOfNumber(9300.0)
+                    getRandomPercentageOfNumber(9300.0), hashSetOf()//mutableListOf()
                 )
 
                 c.contains("casa pia") -> MarkerLocations(
@@ -128,7 +131,7 @@ class MarkerLocations(
                     Type.STADIUM,
                     2600,
                     "Lisboa",
-                    getRandomPercentageOfNumber(2600.0)
+                    getRandomPercentageOfNumber(2600.0), hashSetOf()//mutableListOf()
                 )
 
                 c.contains("portimonense") -> MarkerLocations(
@@ -137,7 +140,7 @@ class MarkerLocations(
                     Type.STADIUM,
                     5000,
                     "Portimão",
-                    getRandomPercentageOfNumber(5000.0)
+                    getRandomPercentageOfNumber(5000.0), hashSetOf()//mutableListOf()
                 )
 
                 c.contains("estoril") -> MarkerLocations(
@@ -146,7 +149,7 @@ class MarkerLocations(
                     Type.STADIUM,
                     5100,
                     "Amoreira",
-                    getRandomPercentageOfNumber(5100.0)
+                    getRandomPercentageOfNumber(5100.0), hashSetOf()//mutableListOf()
                 )
 
                 c.contains("arouca") -> MarkerLocations(
@@ -155,7 +158,7 @@ class MarkerLocations(
                     Type.STADIUM,
                     5600,
                     "Amoreira",
-                    getRandomPercentageOfNumber(5600.0)
+                    getRandomPercentageOfNumber(5600.0), hashSetOf()//mutableListOf()
                 )
 
                 c.contains("vizela") -> MarkerLocations(
@@ -164,7 +167,7 @@ class MarkerLocations(
                     Type.STADIUM,
                     6000,
                     "Vizela",
-                    getRandomPercentageOfNumber(6000.0)
+                    getRandomPercentageOfNumber(6000.0), hashSetOf()//mutableListOf()
                 )
 
                 c.contains("rio ave") -> MarkerLocations(
@@ -173,7 +176,7 @@ class MarkerLocations(
                     Type.STADIUM,
                     5250,
                     "Vila do Conde",
-                    getRandomPercentageOfNumber(5250.0)
+                    getRandomPercentageOfNumber(5250.0), hashSetOf()//mutableListOf()
                 )
 
                 c.contains("gil vicente") -> MarkerLocations(
@@ -182,7 +185,7 @@ class MarkerLocations(
                     Type.STADIUM,
                     12500,
                     "Barcelos",
-                    getRandomPercentageOfNumber(12500.0)
+                    getRandomPercentageOfNumber(12500.0), hashSetOf()//mutableListOf()
                 )
 
                 c.contains("chaves") -> MarkerLocations(
@@ -191,7 +194,7 @@ class MarkerLocations(
                     Type.STADIUM,
                     8400,
                     "Chaves",
-                    getRandomPercentageOfNumber(8400.0)
+                    getRandomPercentageOfNumber(8400.0), hashSetOf()//mutableListOf()
                 )
 
                 else -> MarkerLocations(
@@ -200,7 +203,7 @@ class MarkerLocations(
                     Type.STADIUM,
                     50000,
                     "Porto",
-                    getRandomPercentageOfNumber(50000.0)
+                    getRandomPercentageOfNumber(50000.0), hashSetOf()//mutableListOf()
                 )
             }
         }
@@ -214,7 +217,7 @@ class MarkerLocations(
                     Type.PAVILION,
                     1800,
                     "Lisboa",
-                    getRandomPercentageOfNumber(1800.0)
+                    getRandomPercentageOfNumber(1800.0), hashSetOf()//mutableListOf()
                 )
                 c.contains("sporting") -> return MarkerLocations(
                     "Pavilhão João Rocha",
@@ -222,7 +225,7 @@ class MarkerLocations(
                     Type.PAVILION,
                     3000,
                     "Lisboa",
-                    getRandomPercentageOfNumber(3000.0)
+                    getRandomPercentageOfNumber(3000.0), hashSetOf()//mutableListOf()
                 )
                 c.contains("porto") -> return MarkerLocations(
                     "Dragão Arena",
@@ -230,7 +233,7 @@ class MarkerLocations(
                     Type.PAVILION,
                     2200,
                     "Porto",
-                    getRandomPercentageOfNumber(2200.0)
+                    getRandomPercentageOfNumber(2200.0), hashSetOf()//mutableListOf()
                 )
                 c.contains("abc") -> return MarkerLocations(
                     "Pavilhão Flávio Sá Leite",
@@ -238,7 +241,7 @@ class MarkerLocations(
                     Type.PAVILION,
                     5000,
                     "Braga",
-                    getRandomPercentageOfNumber(5000.0)
+                    getRandomPercentageOfNumber(5000.0), hashSetOf()//mutableListOf()
                 )
                 c.contains("aguas santas") -> return MarkerLocations(
                     "Pavilhão do Águas Santas",
@@ -246,7 +249,7 @@ class MarkerLocations(
                     Type.PAVILION,
                     1000,
                     "Porto",
-                    getRandomPercentageOfNumber(1000.0)
+                    getRandomPercentageOfNumber(1000.0), hashSetOf()//mutableListOf()
                 )
                 c.contains("madeira") -> return MarkerLocations(
                     "Pavilhão do CS Marítimo",
@@ -254,7 +257,7 @@ class MarkerLocations(
                     Type.PAVILION,
                     1000,
                     "Funchal",
-                    getRandomPercentageOfNumber(1000.0)
+                    getRandomPercentageOfNumber(1000.0), hashSetOf()//mutableListOf()
                 )
                 c == "vitoria" -> return MarkerLocations(
                     "Pavilhão Antoine Velge",
@@ -262,7 +265,7 @@ class MarkerLocations(
                     Type.PAVILION,
                     1200,
                     "Setúbal",
-                    getRandomPercentageOfNumber(1200.0)
+                    getRandomPercentageOfNumber(1200.0), hashSetOf()//mutableListOf()
                 )
                 c == "vitoria sc" -> return MarkerLocations(
                     "Pavilhão Vitória SC",
@@ -270,7 +273,7 @@ class MarkerLocations(
                     Type.PAVILION,
                     2500,
                     "Guimarães",
-                    getRandomPercentageOfNumber(2500.0)
+                    getRandomPercentageOfNumber(2500.0), hashSetOf()//mutableListOf()
                 )
                 c.contains("belenenses") -> return MarkerLocations(
                     "Pavilhão Acácio Rosa",
@@ -278,7 +281,7 @@ class MarkerLocations(
                     Type.PAVILION,
                     1700,
                     "Lisboa",
-                    getRandomPercentageOfNumber(1700.0)
+                    getRandomPercentageOfNumber(1700.0), hashSetOf()//mutableListOf()
                 )
                 c.contains("povoa") -> return MarkerLocations(
                     "Pavilhão Desportivo Municipal da Póvoa de Varzim",
@@ -286,7 +289,7 @@ class MarkerLocations(
                     Type.PAVILION,
                     2500,
                     "Póvoa de Varzim",
-                    getRandomPercentageOfNumber(2500.0)
+                    getRandomPercentageOfNumber(2500.0), hashSetOf()//mutableListOf()
                 )
                 c.contains("avanca") -> return MarkerLocations(
                     "Pavilhão Municipal Comendador Adelino Dias Costa",
@@ -294,7 +297,7 @@ class MarkerLocations(
                     Type.PAVILION,
                     5000,
                     "Avanca",
-                    getRandomPercentageOfNumber(5000.0)
+                    getRandomPercentageOfNumber(5000.0), hashSetOf()//mutableListOf()
                 )
                 else -> return MarkerLocations(
                     "Pavilhão Desportivo Municipal de Vila Nova de Gaia",
@@ -302,7 +305,7 @@ class MarkerLocations(
                     Type.PAVILION,
                     2000,
                     "Vila Nova de Gaia",
-                    getRandomPercentageOfNumber(2000.0)
+                    getRandomPercentageOfNumber(2000.0), hashSetOf()//mutableListOf()
                 )
             }
         }

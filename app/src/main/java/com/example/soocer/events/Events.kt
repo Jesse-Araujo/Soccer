@@ -3,7 +3,6 @@ package com.example.soocer.events
 import android.os.Build
 import androidx.annotation.RequiresApi
 import com.example.soocer.data.MarkerLocations
-import com.example.soocer.weather.Weather
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -47,9 +46,10 @@ class Events(
 
 
 
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun toString(): String {
-        return "($homeTeam vs $awayTeam) on ${convertDateToString(date)} in $city\n"
+        return "($homeTeam vs $awayTeam) on ${convertDateToString(date)} in $city, big game > $importantGame\n"
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -60,6 +60,7 @@ class Events(
 
     companion object {
 
+        val events = mutableListOf<Events>()
 
         fun getHandballEvents(onFinished: (List<Events>?) -> Unit) {
             CoroutineScope(Dispatchers.IO).launch {
@@ -155,7 +156,7 @@ class Events(
                 events.add(event)
             }
             val currentDate = LocalDateTime.now()
-            val endDate = currentDate.plusDays(8)
+            val endDate = currentDate.plusDays(60)
 
             return events.filter { event ->
                 val eventDate = event.date
@@ -166,17 +167,19 @@ class Events(
         }
 
         fun isBigGame(homeTeam: String, awayTeam: String): Boolean {
+            val ht = homeTeam.lowercase()
+            val at = awayTeam.lowercase()
             var team1BigTeam = false
             var team2BigTeam = false
-            if (homeTeam.contains("benfica") || homeTeam.contains("sporting") || homeTeam.contains("porto") || homeTeam.contains(
+            if (ht.contains("benfica") || ht.contains("sporting") || ht.contains("porto") || ht.contains(
                     "braga"
-                ) || homeTeam.contains("guima")
+                ) || ht.contains("guima")
             ) {
                 team1BigTeam = true
             }
-            if (awayTeam.contains("benfica") || awayTeam.contains("sporting") || awayTeam.contains("porto") || awayTeam.contains(
+            if (at.contains("benfica") || at.contains("sporting") || at.contains("porto") || at.contains(
                     "braga"
-                ) || awayTeam.contains("guima")
+                ) || at.contains("guima")
             ) {
                 team2BigTeam = true
             }
