@@ -67,7 +67,7 @@ class HandballAPI {
                                 .getString("name"),
                             jsonObject.getJSONObject("teams").getJSONObject("away")
                                 .getString("name")
-                        )
+                        ), mutableListOf()
                     )
                 } else {
                     return null

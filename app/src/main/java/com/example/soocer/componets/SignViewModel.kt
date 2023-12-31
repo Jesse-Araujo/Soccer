@@ -22,7 +22,7 @@ class SignViewModel : ViewModel() {
             .getInstance()
             .signInWithEmailAndPassword(email, password)
             .addOnCompleteListener {
-                Log.d("LOGIN","Inside_login_success")
+                Log.d("LOGIN","Inside_login_complete")
                 Log.d("LOGIN","${it.isSuccessful}")
 
                 if(it.isSuccessful){
@@ -31,9 +31,20 @@ class SignViewModel : ViewModel() {
             }
             .addOnFailureListener {
                 Log.d("LOGIN","Inside_login_failure")
-                Log.d("LOGIN","${it.localizedMessage}")
+                it.localizedMessage?.let { it1 -> Log.d("LOGIN", it1) }
 
                 SignUiState.Error
             }
+    }
+
+    fun register(email: String, password: String) {
+        FirebaseAuth.getInstance().createUserWithEmailAndPassword(email,password).addOnCompleteListener {
+            Log.d("REGISTER","Email $email registered complete")
+            Log.d("REGISTER","${it.isSuccessful}")
+        }.addOnFailureListener {
+            Log.d("REGISTER","Email $email registered failed")
+            it.localizedMessage?.let { it1 -> Log.d("REGISTER", it1) }
+            SignUiState.Error
+        }
     }
 }

@@ -25,7 +25,8 @@ class OddAPI {
             val client = OkHttpClient()
 
             val request = Request.Builder()
-                .url("$apiUrl/odds?fixture=$eventId&bookmaker=$bookmaker&season=$season")
+                .url("$apiUrl/odds?fixture=$eventId&season=$season")
+                //.url("$apiUrl/odds?fixture=$eventId&bookmaker=$bookmaker&season=$season")
                 .header("x-rapidapi-host", apiUrl)
                 .header("x-rapidapi-key", apiKey)
                 .build()
@@ -34,6 +35,7 @@ class OddAPI {
                 val response = client.newCall(request).execute()
                 val odds = getFootballOdd(response.body?.string())
                 withContext(Dispatchers.Main) {
+                    Log.d("odds", odds.toString())
                     uiVal.value = odds
                     event.homeOdd = odds.first
                     event.awayOdd = odds.second
@@ -44,11 +46,11 @@ class OddAPI {
 
         fun getFootballOdd(body: String?): Pair<String, String> {
             if (body == null) {
-                return Pair("erro", "erro")
+                return Pair("no info", "no info")
             }
             Log.d("odds", body)
             val output = JSONObject(body)
-            if (output.getInt("results") == 0) return Pair("erro", "erro")
+            if (output.getInt("results") == 0) return Pair("no info", "no info")
             val jsonArray = output.getJSONArray("response") as JSONArray
             val bookmakers = jsonArray.getJSONObject(0).getJSONArray("bookmakers")
             val bets = bookmakers.getJSONObject(0).getJSONArray("bets")
@@ -60,12 +62,32 @@ class OddAPI {
     }
 }
 
-//fun main() { OddAPI.getFootballOdd(1063602) }
+fun main() {
+    val eventId = 1063613
+    val apiUrl = "https://v3.football.api-sports.io"
+    val season = "2023"
+    val bookmaker = 6
+
+    val apiKey = "d0e33784e246dddf42f91ba3633549b8"
+
+    val client = OkHttpClient()
+
+    val request = Request.Builder()
+        .url("$apiUrl/odds?fixture=$eventId&season=$season")
+        //.url("$apiUrl/odds?fixture=$eventId&bookmaker=$bookmaker&season=$season")
+        .header("x-rapidapi-host", apiUrl)
+        .header("x-rapidapi-key", apiKey)
+        .build()
+    val response = client.newCall(request).execute()
+    val xiu = response.body?.toString()?.split("league:")
+    //xiu?.forEach { println(it) }
+    println(response.body?.toString())
+}
 
 /*1063602
-                                                                                                    1063603
-                                                                                                    1063604
-                                                                                                    1063606
-                                                                                                    1063607
-                                                                                                    1063609
-                                                                                                    1063610*/
+1063603
+1063604
+1063606
+1063607
+1063609
+1063610*/

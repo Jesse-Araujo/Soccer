@@ -12,24 +12,13 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -43,13 +32,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
 import com.example.soocer.R
 import com.example.soocer.data.MarkerLocations
 import com.example.soocer.data.Type
@@ -58,7 +43,6 @@ import com.example.soocer.events.Events
 import com.example.soocer.events.OddAPI
 import com.example.soocer.location.DefaultLocationClient
 import com.example.soocer.location.GPSChecker
-import com.example.soocer.weather.Weather
 import com.example.soocer.weather.WeatherType
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.BitmapDescriptor
@@ -66,10 +50,8 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraMoveStartedReason
-import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerInfoWindow
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.CoroutineScope
@@ -111,7 +93,8 @@ fun HomeScreen(
     val gpsIsOnline = remember { mutableStateOf(false) }
     val e = Events(
         1, EventType.FOOTBALL, "", LocalDateTime.MAX, "", "", "", "", "", "",
-        MarkerLocations("", LatLng(0.0, 0.0), Type.STADIUM, 1, "", 0, hashSetOf()), false
+        MarkerLocations("", LatLng(0.0, 0.0), Type.STADIUM, 1, "", 0, hashSetOf()), false,
+        mutableListOf()
     )
     val showDialog = remember { mutableStateOf(false) }
     val showSearchBar = remember { mutableStateOf(true) }
@@ -134,43 +117,59 @@ fun HomeScreen(
 
 
     }
-
-    LaunchedEffect(Unit) {
-        if (Events.events.isEmpty()) {
-            Events.getFootballEvents { result ->
-                if (!result.isNullOrEmpty()) {
+    val receivedDate = remember { mutableStateOf(false)}
+    if(Events.events.isEmpty()) {
+        LaunchedEffect(Unit) {
+            Events.getDataFromFirebase (receivedDate){result ->
+                if(receivedDate.value) {
+                    Log.d("ja li da firebase",allEvents.toString())
                     Events.events.addAll(result)
                     allEvents?.addAll(result)
                     filteredEvents?.addAll(result)
-                    //result.forEach { filteredEvents.value.add(it.id) }
+                    footballLoading = false
+                    handballLoading = false
+                }else{
+                    CoroutineScope(Dispatchers.IO).launch {
+                        //if (Events.events.isEmpty()) {
+                            Events.getFootballEvents { result ->
+                                if (!result.isNullOrEmpty()) {
+                                    Events.events.addAll(result)
+                                    allEvents?.addAll(result)
+                                    filteredEvents?.addAll(result)
+                                }
+                                footballLoading = false
+                                log(result)
+                            }
+                        /*} else {
+                            allEvents?.addAll(Events.events)
+                            filteredEvents?.addAll(Events.events)
+                            footballLoading = false
+                        }*/
+
+                    }
+                    CoroutineScope(Dispatchers.IO).launch {
+                       // if (Events.events.isEmpty()) {
+                            Events.getHandballEvents { result ->
+                                if (!result.isNullOrEmpty()) {
+                                    Events.events.addAll(result)
+                                    allEvents?.addAll(result)
+                                    filteredEvents?.addAll(result)
+                                }
+                                Log.d("tenho a info de handball", "")
+                                log(result)
+                                handballLoading = false
+                            }
+                        //} else handballLoading = false
+                    }
                 }
-                footballLoading = false
-                log(result)
             }
-        } else {
-            allEvents?.addAll(Events.events)
-            filteredEvents?.addAll(Events.events)
-            footballLoading = false
         }
-
+    } else{
+        allEvents?.addAll(Events.events)
+        filteredEvents?.addAll(Events.events)
+        footballLoading = false
+        handballLoading = false
     }
-    LaunchedEffect(Unit) {
-        if (Events.events.isEmpty()) {
-            Events.getHandballEvents { result ->
-                if (!result.isNullOrEmpty()) {
-                    Events.events.addAll(result)
-                    allEvents?.addAll(result)
-                    filteredEvents?.addAll(result)
-                    //result.forEach { filteredEvents.value.add(it.id) }
-                }
-                Log.d("tenho a info de handball", "")
-                log(result)
-                handballLoading = false
-            }
-        } else handballLoading = false
-
-    }
-
 
     val lat: Double = currentLocation?.latitude ?: 0.0
     val long: Double = currentLocation?.longitude ?: 0.0
@@ -253,6 +252,11 @@ fun HomeScreen(
                 title = "You are here",
             )
             if (!footballLoading && !handballLoading) {
+                if (Events.saveInFirebase) {
+                    //TODO this is saving everytime
+                    Events.saveDataInFirebase()
+                    Events.saveInFirebase = false
+                }
                 Log.d("vou meter markers no mapa", filteredEvents.toString())
                 markers.clear()
                 existingMarkers.clear()
@@ -285,17 +289,6 @@ fun HomeScreen(
                         cameraPositionState
                     )
                 }
-                /*filteredEvents?.forEach {
-                    CustomMarker(
-                        context = appContext,
-                        modifier = Modifier.fillMaxSize(),
-                        event = it,
-                        showDialog,
-                        showSearchBar,
-                        eventForMarkerWindow,
-                        cameraPositionState
-                    )
-                }*/
             } else {
                 Log.d("loading", "")
             }

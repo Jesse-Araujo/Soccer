@@ -39,6 +39,7 @@ import androidx.navigation.NavController
 import com.example.soocer.Screens
 import com.example.soocer.location.LocationService
 
+
 @Composable
 fun SignInScreen(
     navController: NavController,
@@ -76,13 +77,14 @@ fun SignInScreen(
                 label = { Text("Password") }
             )
 
+
             Button(
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(48.dp),
                 onClick = {
                     //TODO validate input fields
-                    if(email.isNotEmpty() && password.isNotEmpty()) //signViewModel.login(email, password)
+                    if(email.isNotEmpty() && password.isNotEmpty()) signViewModel.login(email, password)
                     email = ""
                     password = ""
                     Log.d("bt clicked","")
@@ -94,6 +96,29 @@ fun SignInScreen(
             ) {
                 Text(
                     text = "Login",
+                    fontSize = 18.sp,
+                    color = Color.Black,
+                    fontWeight = FontWeight.Bold
+                )
+
+            }
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(48.dp),
+                onClick = {
+                    if(email.isNotEmpty() && password.isNotEmpty()) signViewModel.register(email, password)
+                    email = ""
+                    password = ""
+                    Log.d("registered btn clicked","")
+                    navController.navigate(Screens.Home.route)
+                },
+                contentPadding = PaddingValues(),
+                colors = ButtonDefaults.buttonColors(Color.Transparent),
+                shape = RoundedCornerShape(50.dp)
+            ) {
+                Text(
+                    text = "Register",
                     fontSize = 18.sp,
                     color = Color.Black,
                     fontWeight = FontWeight.Bold

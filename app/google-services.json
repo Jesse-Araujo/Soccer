@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "833395882705",
-    "project_id": "soocer-223b2",
-    "storage_bucket": "soocer-223b2.appspot.com"
+    "project_number": "856189496004",
+    "project_id": "sports-app-24a12",
+    "storage_bucket": "sports-app-24a12.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:833395882705:android:36e639940385d62e8923f0",
+        "mobilesdk_app_id": "1:856189496004:android:f5a6132f3abca6033bf791",
         "android_client_info": {
           "package_name": "com.example.soocer"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyASWgWn7Ijcb31bLKwxZebvSICNoRa1qic"
+          "current_key": "AIzaSyBCzKU31LBBXM6JRjARuTTfhUTUG9qL0C8"
         }
       ],
       "services": {
