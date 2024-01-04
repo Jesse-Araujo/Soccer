@@ -6,6 +6,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.MutableState
 import com.example.soocer.auxiliary.convertStringToBoolean
 import com.example.soocer.auxiliary.dateStringToLocalDateTime
+import com.example.soocer.auxiliary.getDistanceBetweenTwoPoints
 import com.example.soocer.auxiliary.getEventType
 import com.example.soocer.auxiliary.getMarker
 import com.example.soocer.auxiliary.isYesterday
@@ -56,14 +57,14 @@ class Events(
     val comments: MutableList<String>,
 ) {
 
-    @RequiresApi(Build.VERSION_CODES.O)
+    /*@RequiresApi(Build.VERSION_CODES.O)
     constructor() : this(
         0, EventType.FOOTBALL, "",
         LocalDateTime.now(), "", "", "", "", "", "", MarkerLocations(
             "", LatLng(0.0, 0.0), Type.STADIUM, 0, "", 0,
             hashSetOf()
         ), false, mutableListOf()
-    )
+    )*/
 
     var homeOdd = ""
     var awayOdd = ""
@@ -82,131 +83,7 @@ class Events(
 
     companion object {
 
-        val firebaseRTDB =
-            "https://sports-app-24a12-default-rtdb.europe-west1.firebasedatabase.app/"
-
         val events = mutableListOf<Events>()
-        var saveInFirebase = true
-
-        fun getDataFromFirebase(
-            receivedData: MutableState<Boolean>,
-            onFinished: (List<Events>) -> Unit
-        ) {
-            val db = FirebaseDatabase.getInstance(firebaseRTDB)
-            val eventsDb = db.reference.child("events")
-            db.reference.child("timestamp")
-                .addListenerForSingleValueEvent(object : ValueEventListener {
-                    override fun onDataChange(dataSnapshot: DataSnapshot) {
-                        val date = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            dateStringToLocalDateTime(dataSnapshot.value.toString())
-                        } else {
-                            TODO("VERSION.SDK_INT < O")
-                        }
-                        Log.d("timestamp", date.toString())
-                        if (isYesterday(date)) {
-                            Log.d("info de ontem", "nao quero")
-                            receivedData.value = false
-                            onFinished(mutableListOf())
-                        } else {
-                            readFromDB(eventsDb, receivedData, onFinished)
-                        }
-                    }
-
-                    override fun onCancelled(databaseError: DatabaseError) {
-                        Log.w("Error getting events:", databaseError.toException())
-                    }
-                })
-            saveInFirebase = true
-        }
-
-        fun readFromDB(
-            eventsDb: DatabaseReference, receivedData: MutableState<Boolean>,
-            onFinished: (List<Events>) -> Unit
-        ) {
-            eventsDb.addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(dataSnapshot: DataSnapshot) {
-                    val eventsList = mutableListOf<Events>()
-                    Log.d("info de hoje", "quero")
-                    for (snapshot in dataSnapshot.children) {
-                        //Log.d("snapshot", snapshot.toString())
-                        val id = snapshot.child("id").getValue(Long::class.java)!!
-                        val eventType =
-                            getEventType(snapshot.child("eventType").getValue(String::class.java))
-                        val league = snapshot.child("league").getValue(String::class.java)!!
-                        val date = snapshot.child("date").getValue(String::class.java)!!
-                        val city = snapshot.child("city").getValue(String::class.java)!!
-                        val logo = snapshot.child("logo").getValue(String::class.java)!!
-                        val homeTeam = snapshot.child("homeTeam").getValue(String::class.java)!!
-                        val homeTeamLogo =
-                            snapshot.child("homeTeamLogo").getValue(String::class.java)!!
-                        val awayTeam = snapshot.child("awayTeam").getValue(String::class.java)!!
-                        val awayTeamLogo =
-                            snapshot.child("awayTeamLogo").getValue(String::class.java)!!
-                        val importantGame =
-                            snapshot.child("importantGame").getValue(String::class.java)!!
-                        val comments = snapshot.child("comments").getValue(String::class.java)
-                        //TODO handle comments
-                        val e = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            Events(
-                                id.toInt(),
-                                eventType,
-                                league,
-                                dateStringToLocalDateTime(date),
-                                city,
-                                logo,
-                                homeTeam,
-                                homeTeamLogo,
-                                awayTeam,
-                                awayTeamLogo,
-                                getMarker(homeTeam, eventType),
-                                convertStringToBoolean(importantGame),
-                                mutableListOf()
-                            )
-                        } else {
-                            TODO("VERSION.SDK_INT < O")
-                        }
-                        eventsList.add(e)
-                    }
-                    Log.d("li da firebase", "")
-                    receivedData.value = false
-                    onFinished(eventsList)
-                }
-
-                override fun onCancelled(databaseError: DatabaseError) {
-                    Log.w("Error getting events:", databaseError.toException())
-                    receivedData.value = false
-                }
-            })
-        }
-
-        fun saveDataInFirebase() {
-            val db = FirebaseDatabase.getInstance(firebaseRTDB)
-            db.reference.child("events").setValue(null)
-            db.reference.child("timestamp").setValue(null)
-            events.forEach {
-                val eventsDb = db.reference.child("events").push()
-                eventsDb.child("id").setValue(it.id)
-                eventsDb.child("eventType").setValue(it.eventType.type)
-                eventsDb.child("league").setValue(it.league)
-                eventsDb.child("date").setValue(it.date.toString())
-                eventsDb.child("city").setValue(it.city)
-                eventsDb.child("logo").setValue(it.logo)
-                eventsDb.child("homeTeam").setValue(it.homeTeam)
-                eventsDb.child("homeTeamLogo").setValue(it.homeTeamLogo)
-                eventsDb.child("awayTeam").setValue(it.awayTeam)
-                eventsDb.child("awayTeamLogo").setValue(it.awayTeamLogo)
-                eventsDb.child("markerLocations").setValue("")
-                eventsDb.child("importantGame").setValue(it.importantGame.toString())
-                eventsDb.child("comments").setValue(it.comments.toString())
-            }
-            var timestamp = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                LocalDateTime.now().toString().split(".")[0]
-            } else {
-                TODO("VERSION.SDK_INT < O")
-            }
-            timestamp = timestamp.substring(0, timestamp.length - 3)
-            db.reference.child("timestamp").setValue(timestamp)
-        }
 
         fun getHandballEvents(onFinished: (List<Events>?) -> Unit) {
             CoroutineScope(Dispatchers.IO).launch {
@@ -226,23 +103,15 @@ class Events(
             val leagueId = 94
             val season = "2023"
 
-            // Replace "YOUR_API_KEY" with your actual API key
             val apiKey = "d0e33784e246dddf42f91ba3633549b8"
 
-            // Set up an OkHttpClient
             val client = OkHttpClient()
 
-            // Build the request with headers and parameters
             val request = Request.Builder()
                 .url("$apiUrl?league=$leagueId&season=$season")
                 .header("x-rapidapi-host", "v3.football.api-sports.io")
                 .header("x-rapidapi-key", apiKey)
                 .build()
-
-            /*CoroutineScope(Dispatchers.IO).launch {
-                val response = client.newCall(request).execute()
-                onFinished(createFootballEvents(response.body?.string()))
-            }*/
 
             CoroutineScope(Dispatchers.IO).launch {
                 try {
@@ -273,7 +142,6 @@ class Events(
             if (body == null) {
                 return null
             }
-            //val jsonObject = JSONObject(body)
             val output = JSONObject(body)
             val jsonArray = output.getJSONArray("response") as JSONArray
             for (i in 0 until jsonArray.length()) {
@@ -330,6 +198,23 @@ class Events(
                 team2BigTeam = true
             }
             return team1BigTeam && team2BigTeam
+        }
+
+        fun getEventsInDistance(events: MutableList<Events>?,filteredEvents: MutableList<Events>?,distance : Float,userLoc: LatLng,onFinished: (LatLng) -> Unit) {
+            Log.d("fi ls",filteredEvents?.size.toString())
+            filteredEvents?.clear()
+            Log.d("total events",events?.size.toString())
+            Log.d("filtro por dist",distance.toString())
+            if(distance == 0f) events?.forEach { filteredEvents?.add(it) }
+            else {
+                events?.forEach { event ->
+                    if(getDistanceBetweenTwoPoints(event.markerLocations.latLng,userLoc) <= distance) {
+                        filteredEvents?.add(event)
+                    }
+                }
+                Log.d("filtered list",filteredEvents?.size.toString())
+            }
+            onFinished(LatLng(0.0,0.0))
         }
 
     }

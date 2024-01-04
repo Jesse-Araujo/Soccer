@@ -75,7 +75,7 @@ class HandballAPI {
                 events.add(event)
             }
             val currentDate = LocalDateTime.now()
-            val endDate = currentDate.plusDays(8)
+            val endDate = currentDate.plusDays(60)//default is 8 para 1 semana
 
             return events.filter { event ->
                 val eventDate = event.date

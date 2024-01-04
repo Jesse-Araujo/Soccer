@@ -26,11 +26,7 @@ fun NavGraph(
         startDestination = Screens.SignIn.route
     )
     {
-        //if(Global.open != route) Global.open = route.toString() else return@NavHost
-        //Log.d("nav akinav ", navController.currentDestination.toString())
         composable(route = Screens.SignIn.route) {
-            //if (Global.open != it.destination.route.toString()) Global.open = it.destination.route.toString()
-            //val signViewModel: SignViewModel = viewModel()
             SignInScreen(
                 navController = navController,
                 appContext,
@@ -38,15 +34,10 @@ fun NavGraph(
             )
         }
         composable(route = Screens.Register.route) {
-            //if (Global.open != it.destination.route.toString()) Global.open = it.destination.route.toString()
         }
         composable(route = Screens.Home.route) {
 
-            Log.d("nav aki", it.destination.route.toString())
-            //if (Global.open != it.destination.route.toString()) {
-                //Global.open = it.destination.route.toString()
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    Log.d("abri", "")
                     HomeScreen(navController = navController, appContext)
                 }
         }

@@ -12,12 +12,16 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,12 +36,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import com.example.soocer.R
+import com.example.soocer.data.FirebaseFunctions
 import com.example.soocer.data.MarkerLocations
-import com.example.soocer.data.Type
 import com.example.soocer.events.EventType
 import com.example.soocer.events.Events
 import com.example.soocer.events.OddAPI
@@ -50,6 +55,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraMoveStartedReason
+import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
@@ -60,7 +66,6 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import java.time.LocalDateTime
 
 @RequiresApi(Build.VERSION_CODES.O)
 fun log(events: List<Events>?) {
@@ -88,14 +93,14 @@ fun HomeScreen(
     var handballLoading by remember { mutableStateOf(true) }
     val allEvents by remember { mutableStateOf<MutableList<Events>?>(mutableListOf()) }
     val filteredEvents by remember { mutableStateOf<MutableList<Events>?>(mutableListOf()) }
-    //val filteredEvents = remember { mutableStateOf<HashSet<Int>>(hashSetOf()) }
     var currentLocation by remember { mutableStateOf<Location?>(null) }
     val gpsIsOnline = remember { mutableStateOf(false) }
-    val e = Events(
+    val filterDistance = remember { mutableStateOf("max") }
+    /*val e = Events(
         1, EventType.FOOTBALL, "", LocalDateTime.MAX, "", "", "", "", "", "",
         MarkerLocations("", LatLng(0.0, 0.0), Type.STADIUM, 1, "", 0, hashSetOf()), false,
         mutableListOf()
-    )
+    )*/
     val showDialog = remember { mutableStateOf(false) }
     val showSearchBar = remember { mutableStateOf(true) }
     val showSearchBarRecomendations = remember { mutableStateOf(true) }
@@ -114,61 +119,55 @@ fun HomeScreen(
         } else {
             gpsIsOnline.value = gpsIsOnline2
         }
-
-
     }
-    val receivedDate = remember { mutableStateOf(false)}
-    if(Events.events.isEmpty()) {
+    val receivedDate = remember { mutableStateOf(false) }
+    if (Events.events.isEmpty()) {
         LaunchedEffect(Unit) {
-            Events.getDataFromFirebase (receivedDate){result ->
-                if(receivedDate.value) {
-                    Log.d("ja li da firebase",allEvents.toString())
+            FirebaseFunctions.getDataFromFirebase(receivedDate) { result ->
+                if (result.isNotEmpty()) {
+                    Log.d("ja li da firebase", "")
                     Events.events.addAll(result)
                     allEvents?.addAll(result)
                     filteredEvents?.addAll(result)
                     footballLoading = false
                     handballLoading = false
-                }else{
+                } else {
+                    Log.d("vou ler da API", "")
                     CoroutineScope(Dispatchers.IO).launch {
-                        //if (Events.events.isEmpty()) {
-                            Events.getFootballEvents { result ->
-                                if (!result.isNullOrEmpty()) {
-                                    Events.events.addAll(result)
-                                    allEvents?.addAll(result)
-                                    filteredEvents?.addAll(result)
-                                }
-                                footballLoading = false
-                                log(result)
+                        Events.getFootballEvents { result ->
+                            if (!result.isNullOrEmpty()) {
+                                Events.events.addAll(result)
+                                allEvents?.addAll(result)
+                                filteredEvents?.addAll(result)
                             }
-                        /*} else {
-                            allEvents?.addAll(Events.events)
-                            filteredEvents?.addAll(Events.events)
                             footballLoading = false
-                        }*/
+                            log(result)
+                        }
 
                     }
                     CoroutineScope(Dispatchers.IO).launch {
-                       // if (Events.events.isEmpty()) {
-                            Events.getHandballEvents { result ->
-                                if (!result.isNullOrEmpty()) {
-                                    Events.events.addAll(result)
-                                    allEvents?.addAll(result)
-                                    filteredEvents?.addAll(result)
-                                }
-                                Log.d("tenho a info de handball", "")
-                                log(result)
-                                handballLoading = false
+                        Events.getHandballEvents { result ->
+                            if (!result.isNullOrEmpty()) {
+                                Events.events.addAll(result)
+                                allEvents?.addAll(result)
+                                filteredEvents?.addAll(result)
                             }
-                        //} else handballLoading = false
+                            Log.d("tenho a info de handball", "")
+                            log(result)
+                            handballLoading = false
+                        }
                     }
                 }
             }
         }
-    } else{
-        allEvents?.addAll(Events.events)
-        filteredEvents?.addAll(Events.events)
+    } else {
+
+        Log.d("aki", "")
+        if(allEvents == null || allEvents!!.isEmpty()) allEvents?.addAll(Events.events)
+        if(filteredEvents == null || filteredEvents!!.isEmpty()) filteredEvents?.addAll(Events.events)
         footballLoading = false
         handballLoading = false
+
     }
 
     val lat: Double = currentLocation?.latitude ?: 0.0
@@ -236,30 +235,27 @@ fun HomeScreen(
                 showSearchBarRecomendations.value = false
                 showSearchBar.value = true
                 showDialog.value = false
-                //eventsForMarkerWindow.value = mutableListOf()
-                //currentMarker.value = null
             },
         ) {
             // remove marker window on map drag
             if (cameraPositionState.cameraMoveStartedReason == CameraMoveStartedReason.GESTURE) {
                 showSearchBar.value = true
                 showDialog.value = false
-                //eventsForMarkerWindow.value = mutableListOf()
-                //currentMarker.value = null
             }
             Marker(
                 state = MarkerState(position = LatLng(lat, long)),
                 title = "You are here",
             )
             if (!footballLoading && !handballLoading) {
-                if (Events.saveInFirebase) {
+                if (FirebaseFunctions.saveInFirebase) {
                     //TODO this is saving everytime
-                    Events.saveDataInFirebase()
-                    Events.saveInFirebase = false
+                    FirebaseFunctions.saveDataInFirebase()
+                    FirebaseFunctions.saveInFirebase = false
                 }
-                Log.d("vou meter markers no mapa", filteredEvents.toString())
+                //Log.d("vou meter markers no mapa", filteredEvents.toString())
                 markers.clear()
                 existingMarkers.clear()
+                Log.d("filtered events mapa", filteredEvents?.size.toString())
                 filteredEvents?.forEach {
                     val marker = it.markerLocations
                     val key = "${marker.latLng.latitude} | ${marker.latLng.longitude}"
@@ -276,7 +272,7 @@ fun HomeScreen(
                 }
 
                 existingMarkers.values.toList().forEach {
-                    Log.d("eventos do marker", it.events.toString())
+                    //Log.d("eventos do marker", it.events.toString())
                     CustomMarker(
                         context = appContext,
                         modifier = Modifier.fillMaxSize(),
@@ -296,7 +292,7 @@ fun HomeScreen(
         }
         if (showDialog.value) {
             if (eventsForMarkerWindow.value.size > 1) {
-                ShowEventList(appContext,eventsForMarkerWindow)
+                ShowEventList(appContext, eventsForMarkerWindow)
             } else {
                 alert(event = eventsForMarkerWindow.value[0],
                     appContext,
@@ -313,9 +309,11 @@ fun HomeScreen(
                     allEvents,
                     showSearchBar,
                     showSearchBarRecomendations,
-                    filteredEvents
-                ) { bol,loc ->
-                    if(bol) {
+                    filteredEvents,
+                    filterDistance,
+                    LatLng(lat,long)
+                ) { bol, loc ->
+                    if (bol) {
                         cameraPositionState.position = CameraPosition.fromLatLngZoom(
                             loc,
                             15f
@@ -333,6 +331,15 @@ fun HomeScreen(
                 modifier = Modifier.align(Alignment.TopCenter),
                 style = TextStyle(background = Color.Red)
             )
+            DistanceBox(
+                allEvents = allEvents,
+                filteredEvents = filteredEvents,
+                filterDistance = filterDistance,
+                cameraPositionState = cameraPositionState,
+                lat = lat,
+                long = long
+            )
+
             Button(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -355,6 +362,77 @@ fun HomeScreen(
     }
 }
 
+@Composable
+fun DistanceBox(allEvents: MutableList<Events>?,
+                filteredEvents: MutableList<Events>?,
+                filterDistance : MutableState<String>,
+                cameraPositionState : CameraPositionState,
+                lat:Double,
+                long: Double) {
+    val lightBlueColor = Color(0xFF038FEC)
+    Box (Modifier.fillMaxSize()){
+        Box(modifier = Modifier
+            .align(Alignment.BottomEnd)
+            .padding(bottom = 110.dp, end = 10.dp)
+            .size(75.dp)
+            .background(lightBlueColor, shape = RoundedCornerShape(16.dp))
+            .clickable {
+                changeDistanceFilter(
+                    allEvents, filteredEvents, filterDistance, LatLng(lat, long)
+                ) { loc ->
+                    cameraPositionState.position = CameraPosition.fromLatLngZoom(
+                        cameraPositionState.position.target,
+                        cameraPositionState.position.zoom
+                    )
+                }
+            }
+        ) {
+            Text(
+                text = filterDistance.value,
+                //text = "",
+                modifier = Modifier.align(Alignment.Center),
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+fun changeDistanceFilter(
+    events: MutableList<Events>?,
+    filteredEvents: MutableList<Events>?,
+    filterDistance: MutableState<String>,
+    userLoc: LatLng,
+    onFinished: (LatLng) -> Unit
+) {
+    //Events.getEventsInDistance(events, filteredEvents, 1f, userLoc, onFinished)
+    when (filterDistance.value) {
+        "0.5km" -> {
+            Events.getEventsInDistance(events, filteredEvents, 1f, userLoc, onFinished)
+            filterDistance.value = "1km"
+        }
+
+        "1km" -> {
+            Events.getEventsInDistance(events, filteredEvents, 5f, userLoc, onFinished)
+            filterDistance.value = "5km"
+        }
+
+        "5km" -> {
+            Events.getEventsInDistance(events, filteredEvents, 15f, userLoc, onFinished)
+            filterDistance.value = "15km"
+        }
+
+        "15km" -> {
+            Events.getEventsInDistance(events, filteredEvents, 0f, userLoc, onFinished)
+            filterDistance.value = "max"
+        }
+
+        "max" -> {
+            Events.getEventsInDistance(events, filteredEvents, 0.5f, userLoc, onFinished)
+            filterDistance.value = "0.5km"
+        }
+    }
+}
+
 fun getImage(eventType: EventType): Int {
     return when (eventType) {
         EventType.FOOTBALL -> R.drawable.football_img
@@ -368,7 +446,6 @@ fun getPlaceImage(eventType: EventType): Int {
         else -> R.drawable.pavilion
     }
 }
-
 
 
 fun getOddsForEvent(odds: MutableState<Pair<String, String>>, event: Events) {
@@ -406,6 +483,7 @@ fun bitmapDescriptorFromVector(
 
     return BitmapDescriptorFactory.fromBitmap(bm)
 }
+
 /*
 @Preview
 @Composable

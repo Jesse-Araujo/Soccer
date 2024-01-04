@@ -33,6 +33,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toSize
+import com.example.soocer.auxiliary.getDistanceBetweenTwoPoints
 import com.example.soocer.events.Events
 import com.google.android.gms.maps.model.LatLng
 
@@ -44,28 +45,11 @@ fun AutoComplete(
     showSearchBar: MutableState<Boolean>,
     showRecommendations: MutableState<Boolean>,
     filteredEvents: MutableList<Events>?,
+    filteredDistance : MutableState<String>,
+    userLoc : LatLng,
     //filteredEvents: MutableState<HashSet<Int>>,
     onFinished: (Boolean,LatLng) -> Unit
 ) {
-
-    /*val categories = listOf(
-        "loc: Lisboa",
-        "loc: Porto",
-        "loc: Loures",
-        "loc: Braga",
-        "loc: Algarve",
-        "loc: Benfica",
-        "club: Benfica",
-        "club: Sporting",
-        "club: Porto",
-        "stadium: Estádio da Luz",
-        "stadium: Estádio José Alvalade",
-        "stadium: Estádio do Dragão",
-        "pavilion: Pavilhão da Luz nº1",
-        "pavilion: Pavilhão João Rocha",
-        "pavilion: Dragão Arena",
-        "Others",
-    )*/
     val categories = getSearchTerms(events)
 
     var category by remember {
@@ -178,7 +162,7 @@ fun AutoComplete(
                                             .contains("others")
                                     }.sorted()
                                 ) {
-                                    CategoryItems(title = it,events,filteredEvents,onFinished) { title ->
+                                    CategoryItems(title = it,events,filteredEvents,filteredDistance,userLoc,onFinished) { title ->
                                         category = title
                                         showRecommendations.value = false
                                     }
@@ -187,7 +171,7 @@ fun AutoComplete(
                                 items(
                                     categories.sorted()
                                 ) {
-                                    CategoryItems(title = it,events,filteredEvents,onFinished) { title ->
+                                    CategoryItems(title = it,events,filteredEvents,filteredDistance, userLoc,onFinished) { title ->
                                         category = title
                                         showRecommendations.value = false
                                     }
@@ -209,7 +193,8 @@ fun CategoryItems(
     title: String,
     events: MutableList<Events>?,
     filteredEvents: MutableList<Events>?,
-    //filteredEvents: MutableState<HashSet<Int>>,
+    distance : MutableState<String>,
+    userLoc : LatLng,
     onFinished:  (Boolean,LatLng) -> Unit,
     onSelect: (String) -> Unit
 ) {
@@ -218,7 +203,7 @@ fun CategoryItems(
             .fillMaxWidth()
             .clickable {
                 onSelect(title)
-                searchEvent(title, events, filteredEvents, onFinished)
+                searchEvent(title, events, filteredEvents,distance,userLoc, onFinished)
             }
             .padding(10.dp)
     ) {
@@ -226,14 +211,13 @@ fun CategoryItems(
     }
 }
 
-fun searchEvent(title: String, events: MutableList<Events>?,filteredEvents: MutableList<Events>?,/*filteredEvents: MutableState<HashSet<Int>>*/onFinished:  (Boolean,LatLng) -> Unit) {
+fun searchEvent(title: String, events: MutableList<Events>?,filteredEvents: MutableList<Events>?,distance : MutableState<String>,userLoc : LatLng,onFinished:  (Boolean,LatLng) -> Unit) {
     Log.d("vou pesquisar",title)
-    //filteredEvents.value.clear()
     filteredEvents?.clear()
     when {
         title.startsWith("loc:") -> searchLoc(title.split("loc: ")[1],events,filteredEvents,onFinished)
         title.startsWith("club:") -> searchClub(title.split("club: ")[1],events,filteredEvents,onFinished)
-        title.startsWith("sport:") -> searchSport(title.split("sport: ")[1],events,filteredEvents,onFinished)
+        title.startsWith("sport:") -> searchSport(title.split("sport: ")[1],events,filteredEvents,distance,userLoc,onFinished)
         else -> searchPlace(title.split(": ")[1],events,filteredEvents,onFinished)
     }
 }
@@ -241,7 +225,7 @@ fun searchEvent(title: String, events: MutableList<Events>?,filteredEvents: Muta
 fun searchLoc(location : String, events: MutableList<Events>?,filteredEvents: MutableList<Events>?,onFinished:  (Boolean,LatLng) -> Unit) {
     Log.d("vou pesquisar location",location)
     events?.forEach { event ->
-        if(event.markerLocations.city == location) filteredEvents?.add(event)//filteredEvents.value?.add(event.id)
+        if(event.markerLocations.city == location) filteredEvents?.add(event)
     }
     //Log.d("filtered list -> ",filteredEvents.value?.size.toString())
     onFinished(false, LatLng(0.0,0.0))
@@ -255,10 +239,18 @@ fun searchClub(club: String, events: MutableList<Events>?,filteredEvents: Mutabl
     onFinished(false,LatLng(0.0,0.0))
 }
 
-fun searchSport(sport: String, events: MutableList<Events>?,filteredEvents: MutableList<Events>?,onFinished:  (Boolean,LatLng) -> Unit) {
+fun searchSport(
+    sport: String,
+    events: MutableList<Events>?,
+    filteredEvents: MutableList<Events>?,
+    distance: MutableState<String>,
+    userLoc: LatLng,
+    onFinished: (Boolean, LatLng) -> Unit
+) {
     Log.d("vou pesquisar sport",sport)
+    val dist = getDistance(distance.value)
     events?.forEach { event ->
-        if(event.eventType.toString() == sport) filteredEvents?.add(event)//filteredEvents.value?.add(event.id)
+        if(event.eventType.toString() == sport && getDistanceBetweenTwoPoints(event.markerLocations.latLng,userLoc) <= dist) filteredEvents?.add(event)
     }
     onFinished(false,LatLng(0.0,0.0))
 }
@@ -292,4 +284,14 @@ fun getSearchTerms(events: MutableList<Events>?) : List<String>{
         list.add(place)
     }
     return list.toList()
+}
+
+fun getDistance(dist : String) : Double{
+    return when(dist) {
+        "max" -> 9999999.0
+        "0.5km" -> 0.5
+        "1km" -> 1.0
+        "5km" -> 5.0
+        else -> 15.0
+    }
 }
