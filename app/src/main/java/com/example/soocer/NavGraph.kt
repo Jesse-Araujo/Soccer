@@ -4,16 +4,14 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.util.Log
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.soocer.componets.HomeScreen
-import com.example.soocer.componets.SignInScreen
-import com.example.soocer.componets.SignViewModel
+import com.example.soocer.components.HomeScreen
+import com.example.soocer.components.MapScreen
+import com.example.soocer.components.SignInScreen
 
 @Composable
 fun NavGraph(
@@ -36,9 +34,12 @@ fun NavGraph(
         composable(route = Screens.Register.route) {
         }
         composable(route = Screens.Home.route) {
+            HomeScreen(navController = navController)
+        }
+        composable(route = Screens.Map.route) {
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    HomeScreen(navController = navController, appContext)
+                    MapScreen(navController = navController, appContext)
                 }
         }
     }

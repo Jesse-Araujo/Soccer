@@ -39,6 +39,7 @@ enum class EventType(val type: String) {
     FUTSAL("Futsal"),
     VOLLEYBALL("Volleyball"),
     HOKEY("Hokey"),
+    TENNIS("Tennis"),
 }
 
 class Events(
@@ -56,15 +57,6 @@ class Events(
     val importantGame: Boolean,
     val comments: MutableList<String>,
 ) {
-
-    /*@RequiresApi(Build.VERSION_CODES.O)
-    constructor() : this(
-        0, EventType.FOOTBALL, "",
-        LocalDateTime.now(), "", "", "", "", "", "", MarkerLocations(
-            "", LatLng(0.0, 0.0), Type.STADIUM, 0, "", 0,
-            hashSetOf()
-        ), false, mutableListOf()
-    )*/
 
     var homeOdd = ""
     var awayOdd = ""

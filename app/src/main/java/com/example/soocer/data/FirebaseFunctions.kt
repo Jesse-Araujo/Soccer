@@ -3,11 +3,13 @@ package com.example.soocer.data
 import android.os.Build
 import android.util.Log
 import androidx.compose.runtime.MutableState
+import com.example.soocer.auxiliary.Global
 import com.example.soocer.auxiliary.convertStringToBoolean
 import com.example.soocer.auxiliary.dateStringToLocalDateTime
 import com.example.soocer.auxiliary.getEventType
 import com.example.soocer.auxiliary.getMarker
 import com.example.soocer.auxiliary.isYesterday
+import com.example.soocer.events.EventType
 import com.example.soocer.events.Events
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -54,7 +56,7 @@ class FirebaseFunctions {
             saveInFirebase = true
         }
 
-        fun readFromDB(
+        private fun readFromDB(
             eventsDb: DatabaseReference, receivedData: MutableState<Boolean>,
             onFinished: (List<Events>) -> Unit
         ) {
@@ -63,22 +65,22 @@ class FirebaseFunctions {
                     val eventsList = mutableListOf<Events>()
                     Log.d("info de hoje", "quero")
                     for (snapshot in dataSnapshot.children) {
-                        //Log.d("snapshot", snapshot.toString())
-                        val id = snapshot.child("id").getValue(Long::class.java)!!
+                        //if(snapshot.key != "events") continue
+                        val id = snapshot.child("id").getValue(Long::class.java) ?: continue
                         val eventType =
                             getEventType(snapshot.child("eventType").getValue(String::class.java))
-                        val league = snapshot.child("league").getValue(String::class.java)!!
-                        val date = snapshot.child("date").getValue(String::class.java)!!
-                        val city = snapshot.child("city").getValue(String::class.java)!!
-                        val logo = snapshot.child("logo").getValue(String::class.java)!!
-                        val homeTeam = snapshot.child("homeTeam").getValue(String::class.java)!!
+                        val league = snapshot.child("league").getValue(String::class.java) ?: continue
+                        val date = snapshot.child("date").getValue(String::class.java) ?: continue
+                        val city = snapshot.child("city").getValue(String::class.java) ?: continue
+                        val logo = snapshot.child("logo").getValue(String::class.java) ?: continue
+                        val homeTeam = snapshot.child("homeTeam").getValue(String::class.java) ?: continue
                         val homeTeamLogo =
-                            snapshot.child("homeTeamLogo").getValue(String::class.java)!!
-                        val awayTeam = snapshot.child("awayTeam").getValue(String::class.java)!!
+                            snapshot.child("homeTeamLogo").getValue(String::class.java) ?: continue
+                        val awayTeam = snapshot.child("awayTeam").getValue(String::class.java) ?: continue
                         val awayTeamLogo =
-                            snapshot.child("awayTeamLogo").getValue(String::class.java)!!
+                            snapshot.child("awayTeamLogo").getValue(String::class.java) ?: continue
                         val importantGame =
-                            snapshot.child("importantGame").getValue(String::class.java)!!
+                            snapshot.child("importantGame").getValue(String::class.java) ?: continue
                         val comments = snapshot.child("comments").getValue(String::class.java)
                         //TODO handle comments
                         val e = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -141,6 +143,51 @@ class FirebaseFunctions {
             }
             timestamp = timestamp.substring(0, timestamp.length - 3)
             db.reference.child("timestamp").setValue(timestamp)
+        }
+
+
+        fun saveUserFavSportsInFirebase(favSports: HashSet<String>) {
+            Global.favSports.addAll(favSports)
+            val db = FirebaseDatabase.getInstance(firebaseRTDB)
+            Log.d("id qd dou delitus", Global.userId)
+            if (Global.userId.isNotEmpty()) db.reference.child(Global.userId).setValue(null)
+            Log.d("vou meter", favSports.toString())
+            favSports.forEach {
+                val eventsDb = db.reference.child(Global.userId).push()
+                eventsDb.child("sport").setValue(it)
+            }
+        }
+
+        fun getUserFavSports(onFinished: (HashSet<String>) -> Unit) {
+            val db = FirebaseDatabase.getInstance(firebaseRTDB)
+            val favSportsDB = db.reference.child(Global.userId)
+
+            favSportsDB.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                    val favSports = hashSetOf<String>()
+                    for (snapshot in dataSnapshot.children) {
+                        Log.d("snapshot", snapshot.toString())
+                        //if(snapshot.key != Global.userId) continue
+                        Log.d("user sports", snapshot.toString())
+                        Log.d("user sports", snapshot.children.toString())
+                        //for (sn in snapshot.children) {
+                        //}
+                        Log.d("user sports", snapshot.toString())
+                        val eventType = snapshot.child("sport").getValue(String::class.java)//getEventType(snapshot.child("sport").getValue(String::class.java))
+                        Log.d("type", eventType.toString())
+                        if (eventType != null) {
+                            favSports.add(eventType)
+                        }
+                    }
+                    Global.favSports.addAll(favSports)
+                    onFinished(favSports)
+                }
+
+                override fun onCancelled(databaseError: DatabaseError) {
+                    Log.w("Error getting fav sports:", databaseError.toException())
+                }
+
+            })
         }
     }
 }

@@ -1,7 +1,6 @@
 package com.example.soocer.auxiliary
 
-import android.icu.text.SimpleDateFormat
-import android.icu.util.Calendar
+
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -11,8 +10,6 @@ import com.google.android.gms.maps.model.LatLng
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import java.util.Date
-import java.util.Locale
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.pow
@@ -20,17 +17,13 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 
-/*fun isYesterday(timestamp: Long): Boolean {
-    val calendar = Calendar.getInstance()
-    val today = calendar.get(Calendar.DAY_OF_YEAR)
-
-    calendar.timeInMillis = timestamp
-    val date = calendar.get(Calendar.DAY_OF_YEAR)
-    Log.d("timestamp", date.toString())
-    Log.d("hoje", today.toString())
-
-    return date == (today - 1)
-}*/
+class Global{
+    companion object{
+        val size = 40
+        var userId = ""
+        val favSports = hashSetOf<String>()
+    }
+}
 
 @RequiresApi(Build.VERSION_CODES.O)
 fun isYesterday(localDateTime: LocalDateTime): Boolean {
@@ -48,6 +41,7 @@ fun getEventType(eventType : String?) : EventType {
         "Basketball" -> EventType.BASKETBALL
         "Futsal" -> EventType.FUTSAL
         "Volleyball" -> EventType.VOLLEYBALL
+        "Tennis" -> EventType.TENNIS
         else -> EventType.HOKEY
     }
 }
