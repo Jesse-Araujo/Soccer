@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -31,11 +33,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.soocer.R
 import com.example.soocer.Screens
 import com.example.soocer.location.LocationService
 import kotlinx.coroutines.CoroutineScope
@@ -54,6 +58,7 @@ fun SignInScreen(
     var email by remember { mutableStateOf("z@x.com") }
     var password by remember { mutableStateOf("qwerty") }
     val signViewModel: SignViewModel = viewModel()
+    var loading by remember { mutableStateOf(false) }
 
     Surface(
         modifier = Modifier
@@ -68,6 +73,10 @@ fun SignInScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
+            if(loading) {
+                Image(painter = painterResource(id = R.drawable.loading), contentDescription = "loadingSignIn", modifier = Modifier.size(50.dp))
+            }
 
             OutlinedTextField(
                 value = email,
@@ -87,11 +96,13 @@ fun SignInScreen(
                     .fillMaxWidth()
                     .heightIn(48.dp),
                 onClick = {
+                    loading = true
                     //TODO validate input fields
                     if(email.isNotEmpty() && password.isNotEmpty()) signViewModel.login(email, password){
                         CoroutineScope(Dispatchers.Main).launch {
                             //withContext(Dispatchers.Main) {
-                                navController.navigate(Screens.Home.route)
+                            loading = false
+                            navController.navigate(Screens.Home.route)
                            // }
                         }
                     }
@@ -117,7 +128,9 @@ fun SignInScreen(
                     .fillMaxWidth()
                     .heightIn(48.dp),
                 onClick = {
+                    loading = true
                     if(email.isNotEmpty() && password.isNotEmpty()) signViewModel.register(email, password){
+                        loading = false
                         navController.navigate(Screens.Home.route)
                     }
                     email = ""
@@ -137,30 +150,7 @@ fun SignInScreen(
                 )
 
             }
-            LocationServiceControls(appContext, startService)
-
         }
-    }
-}
-
-@Composable
-fun LocationServiceControls(appContext: Context, startService: (Intent) -> ComponentName?) {
-    Button(onClick = {
-        Intent(appContext,LocationService::class.java).apply{
-            action = LocationService.ACTION_START
-            startService(this)
-        }
-    }) {
-        Text(text = "Start")
-    }
-
-    Button(onClick = {
-        Intent(appContext,LocationService::class.java).apply{
-            action = LocationService.ACTION_STOP
-            startService(this)
-        }
-    }) {
-        Text(text = "Stop")
     }
 }
 

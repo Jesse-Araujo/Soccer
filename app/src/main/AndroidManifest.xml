@@ -24,7 +24,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Soocer"
         tools:targetApi="31">
-        <service android:name=".location.LocationService" android:foregroundServiceType="location"/>
+        <service android:name=".location.LocationService" android:foregroundServiceType="location" android:stopWithTask="false"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"

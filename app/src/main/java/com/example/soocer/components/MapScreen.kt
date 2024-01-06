@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import com.example.soocer.R
+import com.example.soocer.auxiliary.Global
 import com.example.soocer.data.FirebaseFunctions
 import com.example.soocer.data.MarkerLocations
 import com.example.soocer.events.EventType
@@ -151,9 +152,9 @@ fun MapScreen(
                         }
                     }
                     CoroutineScope(Dispatchers.IO).launch {
-                        while (!everythingLoaded){
+                        while (!everythingLoaded) {
                         }
-                        Log.d("Posso salvar","")
+                        Log.d("Posso salvar", "")
                         if (FirebaseFunctions.saveInFirebase) {
                             FirebaseFunctions.saveDataInFirebase()
                             FirebaseFunctions.saveInFirebase = false
@@ -248,7 +249,8 @@ fun MapScreen(
         )*/
         GoogleMap(
             modifier = Modifier
-                .fillMaxSize(),
+                .fillMaxSize()
+                .padding(bottom = Global.size.dp),
             cameraPositionState = cameraPositionState,
             onMapClick = { latLng ->
                 showSearchBarRecomendations.value = false

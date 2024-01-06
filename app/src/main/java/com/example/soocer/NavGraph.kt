@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavDestination
 import androidx.navigation.NavHostController
 
 import androidx.navigation.compose.NavHost
@@ -17,11 +18,12 @@ import com.example.soocer.components.SignInScreen
 fun NavGraph(
     navController: NavHostController,
     appContext: Context,
-    startService: (Intent) -> ComponentName?
+    startService: (Intent) -> ComponentName?,
+    startDestination: String = Screens.SignIn.route,
 ) {
     NavHost(
         navController = navController,
-        startDestination = Screens.SignIn.route
+        startDestination = startDestination,
     )
     {
         composable(route = Screens.SignIn.route) {
@@ -34,13 +36,16 @@ fun NavGraph(
         composable(route = Screens.Register.route) {
         }
         composable(route = Screens.Home.route) {
-            HomeScreen(navController = navController)
+            HomeScreen(
+                navController = navController,
+                appContext = appContext,
+                startService = startService
+            )
         }
         composable(route = Screens.Map.route) {
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    MapScreen(navController = navController, appContext)
-                }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                MapScreen(navController = navController, appContext)
+            }
         }
     }
 }

@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.app.ActivityCompat
 import androidx.navigation.compose.rememberNavController
+import com.example.soocer.auxiliary.Global
 import com.example.soocer.ui.theme.SoocerTheme
 
 class MainActivity : ComponentActivity() {
@@ -16,12 +17,18 @@ class MainActivity : ComponentActivity() {
             arrayOf(
                 Manifest.permission.ACCESS_COARSE_LOCATION,
                 Manifest.permission.ACCESS_FINE_LOCATION,
-                ),0
+            ), 0
         )
         setContent {
             SoocerTheme {
                 val navController = rememberNavController()
-                NavGraph(navController = navController,applicationContext,::startService)
+                if (intent.action == "OPEN_APP_FROM_NOTIFICATION_ACTION") NavGraph(
+                    navController = navController,
+                    appContext = applicationContext,
+                    startService = ::startService,
+                    startDestination = Screens.Map.route
+                )
+                else NavGraph(navController, applicationContext, ::startService)
             }
         }
     }

@@ -1,5 +1,9 @@
 package com.example.soocer.components
 
+import android.app.ActivityManager
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
 import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -23,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.soocer.R
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Switch
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -33,13 +38,17 @@ import androidx.compose.ui.res.painterResource
 import com.example.soocer.auxiliary.Global
 import com.example.soocer.data.FirebaseFunctions
 import com.example.soocer.events.EventType
-import com.example.soocer.events.Events
+import com.example.soocer.location.LocationService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(
+    navController: NavController,
+    appContext: Context,
+    startService: (Intent) -> ComponentName?
+) {
     val favSports = remember { mutableStateOf(hashSetOf<String>()) }
     LaunchedEffect(Unit) {
         FirebaseFunctions.getUserFavSports {
@@ -48,14 +57,18 @@ fun HomeScreen(navController: NavController) {
         }
     }
     Box(modifier = Modifier.fillMaxSize()) {
-        Home(favSports)
+        Home(favSports, appContext, startService)
         BottomNavigator(navController = navController)
     }
 }
 
 
 @Composable
-fun Home(favSports: MutableState<HashSet<String>>) {
+fun Home(
+    favSports: MutableState<HashSet<String>>,
+    appContext: Context,
+    startService: (Intent) -> ComponentName?
+) {
     if (Global.favSports.isNotEmpty()) favSports.value = Global.favSports
     val size = 150
     val color = Color(0xFF06A00D)
@@ -94,6 +107,7 @@ fun Home(favSports: MutableState<HashSet<String>>) {
                 img2 = EventType.FUTSAL.type,
                 favSports = favSports,
             )
+            LocationServiceControls(appContext, startService)
         }
     }
 }
@@ -119,7 +133,7 @@ fun SportCard(
 fun SportImage(
     size: Int, sport: String, favSports: MutableState<HashSet<String>>,
 ) {
-    var show by remember{ mutableStateOf(false)}
+    var show by remember { mutableStateOf(false) }
     show = favSports.value.contains(sport)
     Box() {
         if (show) {
@@ -135,10 +149,11 @@ fun SportImage(
                 .combinedClickable(
                     onClick = { onSportClick(sport) },
                     onLongClick = {
-                        Log.d("show",show.toString())
+                        Log.d("show", show.toString())
                         show = !show
-                        Log.d("show",show.toString())
-                        onSportLongClick(sport, favSports,) }
+                        Log.d("show", show.toString())
+                        onSportLongClick(sport, favSports)
+                    }
                 ),
             painter = painterResource(id = getId(sport)),
             contentDescription = "${sport}_img",
@@ -172,6 +187,55 @@ fun getId(eventType: String): Int {
         EventType.TENNIS.type -> R.drawable.tennis_img
         else -> R.drawable.judo_img
     }
+}
+
+@Composable
+fun LocationServiceControls(appContext: Context, startService: (Intent) -> ComponentName?) {
+    val isLocationServiceRunning = isServiceRunning(appContext, LocationService::class.java)
+    var checked by remember {
+        mutableStateOf(
+            isServiceRunning(
+                appContext,
+                LocationService::class.java
+            )
+        )
+    }
+    Row (modifier = Modifier.fillMaxWidth().padding(end = 5.dp), horizontalArrangement = Arrangement.End){
+        Text(text = "Notifications",modifier = Modifier.align(Alignment.CenterVertically).padding(end = 5.dp))
+            Switch(
+                checked = checked,
+                onCheckedChange = {
+                    checked = it
+                    //Start service if switch is on and service is off
+                    if (it && !isLocationServiceRunning) {
+                        Intent(appContext, LocationService::class.java).apply {
+                            action = LocationService.ACTION_START
+                            startService(this)
+                        }
+                    }
+                    //Stop service
+                    if (!it) {
+                        Intent(appContext, LocationService::class.java).apply {
+                            action = LocationService.ACTION_STOP
+                            startService(this)
+                        }
+                    }
+                }
+            )
+
+    }
+}
+
+fun isServiceRunning(context: Context, serviceClass: Class<*>): Boolean {
+    val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+    val services = manager.getRunningServices(Integer.MAX_VALUE)
+
+    for (service in services) {
+        if (serviceClass.name == service.service.className) {
+            return true
+        }
+    }
+    return false
 }
 
 /*fun SportImage(size: Int, img: Int, onclick: () -> Unit) {
