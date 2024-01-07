@@ -80,3 +80,14 @@ fun getDistanceBetweenTwoPoints(loc1 :LatLng,loc2 :LatLng) : Double{
 
     return earthRadius * c
 }
+
+fun getTimeFilterValue(time: String) : Long {
+    return when(time) {
+        "today" -> 0
+        "1 day" -> 1
+        "3 days" -> 3
+        "5 days" -> 5
+        "1 week" -> 7
+        else -> 14
+    }
+}

@@ -1,10 +1,13 @@
 package com.example.soocer.components
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,7 +21,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,6 +37,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat.startActivity
 import coil.compose.AsyncImage
 import com.example.soocer.R
 import com.example.soocer.data.MarkerLocations
@@ -40,6 +46,7 @@ import com.example.soocer.events.Events
 import com.example.soocer.weather.Weather
 import com.example.soocer.weather.WeatherType
 import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.MarkerInfoWindow
 import com.google.maps.android.compose.MarkerState
@@ -58,16 +65,16 @@ fun CustomMarker(
 ) {
     var thereIsBigGame = false
     marker.events.forEach {
-        if(it.importantGame) thereIsBigGame = true
+        if (it.importantGame) thereIsBigGame = true
     }
-    val iconResourceId = when  {
+    val iconResourceId = when {
         marker.type == Type.STADIUM && thereIsBigGame -> R.drawable.stadium_big_game
         marker.type == Type.PAVILION && thereIsBigGame -> R.drawable.pavilion_big_game
         marker.type == Type.STADIUM -> R.drawable.stadium
         else -> R.drawable.pavilion
     }
-    var size = Pair(100,75)
-    if(thereIsBigGame) size = Pair(280,200)
+    var size = Pair(100, 75)
+    if (thereIsBigGame) size = Pair(280, 200)
     val icon = bitmapDescriptorFromVector(
         context, iconResourceId, size.first, size.second
     )
@@ -108,10 +115,16 @@ fun ShowEventList(context: Context, eventsForMarkerWindow: MutableState<MutableL
             ) {
                 Row {
                     Spacer(modifier = Modifier.weight(.4f))
-                    Text(text = eventsForMarkerWindow.value[0].homeTeam, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = eventsForMarkerWindow.value[0].homeTeam,
+                        fontWeight = FontWeight.Bold
+                    )
                     Spacer(modifier = Modifier.weight(.4f))
                 }
-                LazyColumn(Modifier.padding(top = 15.dp), contentPadding = PaddingValues(top = 20.dp)) {
+                LazyColumn(
+                    Modifier.padding(top = 15.dp),
+                    contentPadding = PaddingValues(top = 20.dp)
+                ) {
                     items(eventsForMarkerWindow.value.toList()) { event ->
                         EventListItem(
                             event = event,
@@ -124,7 +137,7 @@ fun ShowEventList(context: Context, eventsForMarkerWindow: MutableState<MutableL
             }
         }
     } else selectedEvent.value?.let {
-        alert(event = it, context = context, showBackButton = true) {
+        WindowMarkerDetails(event = it, context = context, showBackButton = true) {
             showOneEvent.value = false
         }
     }
@@ -140,7 +153,7 @@ fun EventListItem(
     selectedEvent: MutableState<Events?>
 ) {
     var color = Color.White
-    if(event.importantGame) color = Color.Red
+    if (event.importantGame) color = Color.Red
     Row(
         Modifier
             .fillMaxWidth()
@@ -166,7 +179,7 @@ fun EventListItem(
 
 
 @Composable
-fun alert(
+fun WindowMarkerDetails(
     event: Events,
     context: Context,
     showBackButton: Boolean = false,
@@ -185,7 +198,11 @@ fun alert(
                 .align(Alignment.TopCenter)
                 .clickable { Log.d("click na box", "") },//to stop window from disappear on map drag
         ) {
-            Column(Modifier.fillMaxSize()) {
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+            ) {
                 Spacer(
                     modifier = Modifier
                         .size(10.dp)
@@ -300,24 +317,81 @@ fun alert(
                         contentDescription = "odds",
                         modifier = Modifier.size(39.dp)
                     )
-                    Spacer(
-                        modifier = Modifier
-                            .size(10.dp)
-                    )
+                    Spacer(Modifier.size(10.dp))
                     Text(
                         text = "${event.homeTeam} ${odds.value.first} - ${odds.value.second} ${event.awayTeam}",
                         Modifier.padding(top = 5.dp)
                     )
                 }
+                TicketBuyOption(context, event)
+                ShareEventOption(context,event)
                 if (showBackButton) {
-                Row(horizontalArrangement = Arrangement.Center) {
-                    Spacer(modifier = Modifier.weight(.4f)) // This creates a flexible space to push the button to the center
-                    Button(onClick = onDismiss) { Text(text = "Back") }
-                    Spacer(modifier = Modifier.weight(.4f))
+                    Row(horizontalArrangement = Arrangement.Center) {
+                        Spacer(modifier = Modifier.weight(.4f)) // This creates a flexible space to push the button to the center
+                        Button(onClick = onDismiss) { Text(text = "Back") }
+                        Spacer(modifier = Modifier.weight(.4f))
+                    }
                 }
-            }
-
             }
         }
     }
+}
+
+@Composable
+fun TicketBuyOption(appContext: Context, event: Events) {
+    val linkUrl =
+        "https://www.google.com/search?&q=comprar+bilhetes+${event.homeTeam}+${event.awayTeam}"
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { openLink(appContext, linkUrl) }, horizontalArrangement = Arrangement.Center
+    ) {
+        Text(text = "Buy Tickets", fontWeight = FontWeight.Bold, color = Color.Blue)
+        Spacer(Modifier.size(10.dp))
+        Image(
+            painter = painterResource(id = R.drawable.ic_link),
+            contentDescription = "buy_ticket_img"
+        )
+    }
+}
+
+@Composable
+fun ShareEventOption(appContext: Context, event: Events) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                val date = event.date
+                    .toString()
+                    .replace("T", " ")+"h"
+                shareContent(
+                    context = appContext,
+                    subject = "${event.eventType.type} game",
+                    text = "${event.homeTeam} vs ${event.awayTeam} on $date",
+                    latLng = event.markerLocations.latLng
+                )
+            }, horizontalArrangement = Arrangement.Center
+    ) {
+        Image(painter = painterResource(id = R.drawable.ic_share), contentDescription ="share_img" )
+    }
+}
+
+fun openLink(context: Context, url: String) {
+    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+    context.startActivity(intent)
+}
+
+fun shareContent(context: Context, subject: String, text: String, latLng: LatLng) {
+    //val locationUri = "geo:${latLng.latitude},${latLng.longitude}"
+    val mapUrl = "https://www.google.com/maps?q=${latLng.latitude},${latLng.longitude}"
+
+    val intent = Intent(Intent.ACTION_SEND)
+    intent.type = "text/plain"
+    intent.putExtra(Intent.EXTRA_SUBJECT, subject)
+    intent.putExtra(Intent.EXTRA_TEXT, "$text\n$mapUrl")
+
+    val chooserIntent = Intent.createChooser(intent, "Share via")
+    chooserIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+    context.startActivity(chooserIntent)
 }

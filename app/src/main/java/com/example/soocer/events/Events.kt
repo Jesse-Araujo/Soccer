@@ -4,20 +4,11 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.MutableState
-import com.example.soocer.auxiliary.convertStringToBoolean
 import com.example.soocer.auxiliary.dateStringToLocalDateTime
 import com.example.soocer.auxiliary.getDistanceBetweenTwoPoints
-import com.example.soocer.auxiliary.getEventType
-import com.example.soocer.auxiliary.getMarker
-import com.example.soocer.auxiliary.isYesterday
+import com.example.soocer.auxiliary.getTimeFilterValue
 import com.example.soocer.data.MarkerLocations
-import com.example.soocer.data.Type
 import com.google.android.gms.maps.model.LatLng
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -31,6 +22,7 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 enum class EventType(val type: String) {
     FOOTBALL("Football"),
@@ -192,21 +184,71 @@ class Events(
             return team1BigTeam && team2BigTeam
         }
 
-        fun getEventsInDistance(events: MutableList<Events>?,filteredEvents: MutableList<Events>?,distance : Float,userLoc: LatLng,onFinished: (LatLng) -> Unit) {
-            Log.d("fi ls",filteredEvents?.size.toString())
+        fun getEventsInDistance(
+            events: MutableList<Events>?,
+            filteredEvents: MutableList<Events>?,
+            distance: Float,
+            userLoc: LatLng,
+            onFinished: (LatLng) -> Unit
+        ) {
+            Log.d("fi ls", filteredEvents?.size.toString())
             filteredEvents?.clear()
-            Log.d("total events",events?.size.toString())
-            Log.d("filtro por dist",distance.toString())
-            if(distance == 0f) events?.forEach { filteredEvents?.add(it) }
+            Log.d("total events", events?.size.toString())
+            Log.d("filtro por dist", distance.toString())
+            if (distance == 0f) events?.forEach { filteredEvents?.add(it) }
             else {
                 events?.forEach { event ->
-                    if(getDistanceBetweenTwoPoints(event.markerLocations.latLng,userLoc) <= distance) {
+                    if (getDistanceBetweenTwoPoints(
+                            event.markerLocations.latLng,
+                            userLoc
+                        ) <= distance
+                    ) {
                         filteredEvents?.add(event)
                     }
                 }
-                Log.d("filtered list",filteredEvents?.size.toString())
+                Log.d("filtered list", filteredEvents?.size.toString())
             }
-            onFinished(LatLng(0.0,0.0))
+            onFinished(LatLng(0.0, 0.0))
+        }
+
+
+        fun getEventsWithTimeFilter(
+            allEvents: MutableList<Events>?,
+            filteredEvents: MutableList<Events>?,
+            timeFilter: MutableState<String>,
+            currentSearch: MutableList<Events>?
+        ) {
+
+            Log.d("filtered events", filteredEvents?.size.toString())
+
+            val today = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                dateStringToLocalDateTime(LocalDateTime.now().toString().substring(0,16))
+            } else {
+                TODO("VERSION.SDK_INT < O")
+            }
+
+            val time = getTimeFilterValue(timeFilter.value)
+
+            val nextWeek = today.plus(time, ChronoUnit.DAYS)
+
+
+            val ids = hashSetOf<String>()
+            if(currentSearch?.isEmpty() == true) allEvents?.forEach { ids.add("${it.id}+${it.eventType.type}") }
+            else currentSearch?.forEach { ids.add("${it.id}+${it.eventType.type}") }
+            val newList = mutableListOf<Events>()
+            allEvents?.forEach { event ->
+                val id = "${event.id}+${event.eventType.type}"
+                if(ids.contains(id)) {
+                    if(event.date.isEqual(today) || (event.date.isAfter(today) && event.date.isBefore(
+                            nextWeek
+                        ))) {
+                        newList.add(event)
+                    }
+                }
+            }
+            filteredEvents?.clear()
+            newList.forEach { filteredEvents?.add(it) }
+
         }
 
     }

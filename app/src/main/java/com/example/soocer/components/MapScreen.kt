@@ -14,12 +14,20 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -101,6 +109,8 @@ fun MapScreen(
     val eventsForMarkerWindow = remember { mutableStateOf<MutableList<Events>>(mutableListOf()) }
     val markers by remember { mutableStateOf<MutableList<MarkerLocations>>(mutableListOf()) }
     val existingMarkers by remember { mutableStateOf<HashMap<String, MarkerLocations>>(hashMapOf()) }
+    val selectedTimeFilter = remember { mutableStateOf("today") }
+    val currentSearch by remember { mutableStateOf<MutableList<Events>?>(mutableListOf()) }
     GPSChecker(appContext) { gpsIsOnline2, loc ->
         if (gpsIsOnline2) {
             if (!gpsIsOnline.value) {
@@ -166,7 +176,6 @@ fun MapScreen(
         }
     } else {
 
-        Log.d("aki", allEvents.toString())
         if (allEvents == null || allEvents!!.isEmpty()) allEvents?.addAll(Events.events)
         if (filteredEvents == null || filteredEvents!!.isEmpty()) filteredEvents?.addAll(Events.events)
         footballLoading = false
@@ -268,14 +277,10 @@ fun MapScreen(
                 title = "You are here",
             )
             if (!footballLoading && !handballLoading) {
-                /*if (FirebaseFunctions.saveInFirebase) {
-                    //TODO this is saving everytime
-                    FirebaseFunctions.saveDataInFirebase()
-                    FirebaseFunctions.saveInFirebase = false
-                }*/
-                //Log.d("vou meter markers no mapa", filteredEvents.toString())
                 markers.clear()
                 existingMarkers.clear()
+                Log.d("filtered events mapa", filteredEvents?.size.toString())
+                Events.getEventsWithTimeFilter(allEvents,filteredEvents,selectedTimeFilter,currentSearch)
                 Log.d("filtered events mapa", filteredEvents?.size.toString())
                 filteredEvents?.forEach {
                     val marker = it.markerLocations
@@ -291,7 +296,6 @@ fun MapScreen(
                         existingMarkers.put(key, it.markerLocations)
                     }
                 }
-
                 existingMarkers.values.toList().forEach {
                     //Log.d("eventos do marker", it.events.toString())
                     CustomMarker(
@@ -315,7 +319,7 @@ fun MapScreen(
             if (eventsForMarkerWindow.value.size > 1) {
                 ShowEventList(appContext, eventsForMarkerWindow)
             } else {
-                alert(event = eventsForMarkerWindow.value[0],
+                WindowMarkerDetails(event = eventsForMarkerWindow.value[0],
                     appContext,
                     onDismiss = { showDialog.value = false })
                 //eventsForMarkerWindow.value = mutableListOf()
@@ -324,14 +328,15 @@ fun MapScreen(
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
-            Box {
+            Column {
                 AutoComplete(
-                    modifier = Modifier.align(Alignment.TopCenter),
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
                     allEvents,
                     showSearchBar,
                     showSearchBarRecomendations,
                     filteredEvents,
                     filterDistance,
+                    currentSearch,
                     LatLng(lat, long)
                 ) { bol, loc ->
                     if (bol) {
@@ -346,6 +351,7 @@ fun MapScreen(
                         )
                     }
                 }
+                TimeFilterOptions(selectedTimeFilter,showSearchBar)
             }
             if (!gpsIsOnline.value) Text(
                 text = "Turn on GPS",
@@ -367,27 +373,57 @@ fun MapScreen(
                 showDialog = showDialog,
                 showSearchBar = showSearchBar
             )
-
-            /*Button(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxHeight(.05f)
-                    .fillMaxWidth(.3f),
-                onClick = {
-                    cameraPositionState.position =
-                        CameraPosition.fromLatLngZoom(LatLng(lat, long), 15f)
-                    showSearchBar.value = true
-                    showDialog.value = false
-                }
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_gps_fixed),
-                    contentDescription = "Camera",
-                    modifier = Modifier.size(24.dp)
-                )
-            }*/
         }
         BottomNavigator(navController = navController)
+    }
+}
+
+@Composable
+fun TimeFilterOptions(
+    selectedTimeFilter: MutableState<String>,
+    showSearchBar: MutableState<Boolean>
+) {
+    if(showSearchBar.value) {
+        Row(
+            modifier = Modifier
+                .horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.Center
+        ) {
+            Spacer(modifier = Modifier.size(10.dp))
+            TimeFilterButtons("today",selectedTimeFilter){}
+            Spacer(modifier = Modifier.size(10.dp))
+            TimeFilterButtons("1 day",selectedTimeFilter){}
+            Spacer(modifier = Modifier.size(10.dp))
+            TimeFilterButtons("3 days",selectedTimeFilter){}
+            Spacer(modifier = Modifier.size(10.dp))
+            TimeFilterButtons("5 days",selectedTimeFilter){}
+            Spacer(modifier = Modifier.size(10.dp))
+            TimeFilterButtons("1 week",selectedTimeFilter){}
+            Spacer(modifier = Modifier.size(10.dp))
+            TimeFilterButtons("2 weeks",selectedTimeFilter){}
+            Spacer(modifier = Modifier.size(10.dp))
+        }
+    }
+}
+
+@Composable
+fun TimeFilterButtons(text: String, selectedFilter: MutableState<String>,onFinished: () -> Unit) {
+    val blueColor = Color(0xFF007BFF)
+    val isSelected = selectedFilter.value == text
+    Button(
+        modifier = Modifier,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (isSelected) blueColor else Color.White,
+            contentColor = if (isSelected) Color.White else Color.Black
+        ),
+        onClick = {
+            selectedFilter.value = text
+            onFinished()
+        }) {
+        Text(
+            text = text,
+            modifier = Modifier.align(Alignment.CenterVertically),
+            fontWeight = FontWeight.Bold
+        )
     }
 }
 
