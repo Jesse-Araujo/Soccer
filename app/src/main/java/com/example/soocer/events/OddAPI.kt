@@ -16,6 +16,12 @@ class OddAPI {
     companion object {
 
         fun getFootballOdd(eventId: Int, uiVal: MutableState<Pair<String, String>>, event: Events) {
+            Log.d("odds", "poupar api")
+            uiVal.value = Pair("xiu","xiu")
+            event.homeOdd = "xiu"
+            event.awayOdd = "xiu"
+            return
+
             val apiUrl = "https://v3.football.api-sports.io"
             val season = "2023"
             val bookmaker = 6

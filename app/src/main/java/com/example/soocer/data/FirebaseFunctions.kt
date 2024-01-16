@@ -79,8 +79,10 @@ class FirebaseFunctions {
                         val awayTeam = snapshot.child("awayTeam").getValue(String::class.java) ?: continue
                         val awayTeamLogo =
                             snapshot.child("awayTeamLogo").getValue(String::class.java) ?: continue
-                        val importantGame =
-                            snapshot.child("importantGame").getValue(String::class.java) ?: continue
+                        //val importantGame = snapshot.child("importantGame").getValue(String::class.java) ?: continue
+                        val upvotes = snapshot.child("upvotes").getValue(Long::class.java) ?: 0
+                        val importantGame =  upvotes >= 2 || Events.isBigGame(homeTeam,awayTeam)
+
                         val comments = snapshot.child("comments").getValue(String::class.java)
                         //TODO handle comments
                         val e = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -96,7 +98,8 @@ class FirebaseFunctions {
                                 awayTeam,
                                 awayTeamLogo,
                                 getMarker(homeTeam, eventType),
-                                convertStringToBoolean(importantGame),
+                                //convertStringToBoolean(importantGame),
+                                importantGame,
                                 mutableListOf()
                             )
                         } else {
@@ -120,6 +123,7 @@ class FirebaseFunctions {
             val db = FirebaseDatabase.getInstance(firebaseRTDB)
             db.reference.child("events").setValue(null)
             db.reference.child("timestamp").setValue(null)
+            Log.d("events save DB",Events.events.toString())
             Events.events.forEach {
                 val eventsDb = db.reference.child("events").push()
                 eventsDb.child("id").setValue(it.id)
@@ -186,8 +190,75 @@ class FirebaseFunctions {
                 override fun onCancelled(databaseError: DatabaseError) {
                     Log.w("Error getting fav sports:", databaseError.toException())
                 }
-
             })
+        }
+
+        fun saveUserUpvotesInFirebase() {
+            //Global.upvotes.addAll(upvotes)
+            val db = FirebaseDatabase.getInstance(firebaseRTDB)
+            if (Global.userId.isNotEmpty()) db.reference.child(Global.userId).child("upvotes").setValue(null)
+            Global.upvotes.forEach {
+                val eventsDb = db.reference.child(Global.userId).child("upvotes").push()
+                eventsDb.child("eventID").setValue(it)
+            }
+        }
+
+        fun getUserUpvotedGames() {
+            val db = FirebaseDatabase.getInstance(firebaseRTDB)
+            val userDb = db.reference.child(Global.userId).child("upvotes")
+
+            userDb.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                    val upvotes = hashSetOf<String>()
+                    for (snapshot in dataSnapshot.children) {
+                        Log.d("upvote snap",snapshot.toString())
+                        val upvoteId = snapshot.child("eventID").getValue(String::class.java)
+                        Log.d("upvote id", upvoteId.toString())
+                        if (upvoteId != null) {
+                            upvotes.add(upvoteId)
+                        }
+                    }
+                    Global.upvotes.addAll(upvotes)
+                    //onFinished(favSports)
+                }
+
+                override fun onCancelled(databaseError: DatabaseError) {
+                    Log.w("Error getting fav sports:", databaseError.toException())
+                }
+            })
+        }
+
+        fun changeEventUpvote(eventId : String,upvote:Boolean) {
+            val db = FirebaseDatabase.getInstance(firebaseRTDB)
+            db.reference.child("events").get().addOnSuccessListener { dataSnapshot ->
+                Log.d("xiu","")
+                if (dataSnapshot.exists()) {
+                    Log.d("existe","")
+                    for (snapshot in dataSnapshot.children) {
+                        val id = snapshot.child("id").getValue(Long::class.java) ?: continue
+                        if(id.toString() == eventId) {
+                            Log.d("existe id","benficaz - boa")
+                            var upvotes = snapshot.child("upvotes").getValue(Int::class.java) ?: 0
+                            Log.d("upvotes",upvotes.toString())
+                            if(upvote) upvotes++ else upvotes--
+                            snapshot.ref.child("upvotes").setValue(upvotes)
+                                .addOnSuccessListener {
+                                    // Update successful
+                                    // Handle success as needed
+                                }
+                                .addOnFailureListener {
+                                    // Update failed
+                                    // Handle failure as needed
+                                }
+                        }
+                    }
+                } else {
+                    // No events found
+                    // Handle accordingly
+                }
+            }.addOnFailureListener {
+                // Handle failure to retrieve data
+            }
         }
     }
 }

@@ -15,6 +15,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Box
@@ -25,7 +26,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
@@ -92,6 +93,7 @@ fun MapScreen(
     navController: NavController,
     appContext: Context
 ) {
+    Log.d("upts",Global.upvotes.toString())
     val cameraPositionState = rememberCameraPositionState()
     var footballLoading by remember { mutableStateOf(true) }
     var handballLoading by remember { mutableStateOf(true) }
@@ -280,7 +282,7 @@ fun MapScreen(
                 markers.clear()
                 existingMarkers.clear()
                 Log.d("filtered events mapa", filteredEvents?.size.toString())
-                Events.getEventsWithTimeFilter(allEvents,filteredEvents,selectedTimeFilter,currentSearch)
+                Events.getEventsWithTimeFilter(allEvents,filteredEvents,selectedTimeFilter,currentSearch,filterDistance,LatLng(lat,long))
                 Log.d("filtered events mapa", filteredEvents?.size.toString())
                 filteredEvents?.forEach {
                     val marker = it.markerLocations
@@ -441,8 +443,8 @@ fun CenterUserPositionBox(
             .align(Alignment.BottomEnd)
             .padding(bottom = 220.dp, end = 10.dp)
             .size(75.dp)
-            .background(lightBlueColor, shape = RoundedCornerShape(16.dp))
-            .clickable {
+            .background(lightBlueColor, shape = CircleShape)
+            .clickable(interactionSource = MutableInteractionSource(),indication = null) {
                 cameraPositionState.position =
                     CameraPosition.fromLatLngZoom(LatLng(lat, long), 15f)
                 showSearchBar.value = true
@@ -469,14 +471,14 @@ fun DistanceBox(
     lat: Double,
     long: Double
 ) {
-    val lightBlueColor = Color(0xFF4A89f3)//Color(0xFF038FEC)
+    val lightBlueColor = Color(0xFF4A89f3)
     Box(Modifier.fillMaxSize()) {
         Box(modifier = Modifier
             .align(Alignment.BottomEnd)
             .padding(bottom = 140.dp, end = 10.dp)
             .size(75.dp)
-            .background(lightBlueColor, shape = RoundedCornerShape(16.dp))
-            .clickable {
+            .background(lightBlueColor, shape = CircleShape)
+            .clickable(interactionSource = MutableInteractionSource(),indication = null) {
                 changeDistanceFilter(
                     allEvents, filteredEvents, filterDistance, LatLng(lat, long)
                 ) { loc ->
@@ -505,7 +507,12 @@ fun changeDistanceFilter(
     onFinished: (LatLng) -> Unit
 ) {
     when (filterDistance.value) {
-        "0.5km" -> {
+        "0.5km" -> filterDistance.value = "1km"
+        "1km" -> filterDistance.value = "5km"
+        "5km" -> filterDistance.value = "15km"
+        "15km" -> filterDistance.value = "max"
+        "max" -> filterDistance.value = "0.5km"
+        /*"0.5km" -> {
             Events.getEventsInDistance(events, filteredEvents, 1f, userLoc, onFinished)
             filterDistance.value = "1km"
         }
@@ -528,7 +535,7 @@ fun changeDistanceFilter(
         "max" -> {
             Events.getEventsInDistance(events, filteredEvents, 0.5f, userLoc, onFinished)
             filterDistance.value = "0.5km"
-        }
+        }*/
     }
 }
 
@@ -582,197 +589,6 @@ fun bitmapDescriptorFromVector(
 
     return BitmapDescriptorFactory.fromBitmap(bm)
 }
-
-/*
-@Preview
-@Composable
-fun alert() {
-
-    Card(modifier = Modifier.fillMaxSize()) {
-        Column(Modifier.fillMaxSize()) {
-            Spacer(
-                modifier = Modifier
-                    .size(10.dp)
-            )
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                //AsyncImage(model = "https://media-4.api-sports.io/football/teams/211.png", contentDescription = "home_logo")
-                Text(text = "Benfica vs Sporting", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                //AsyncImage(model = "https://media-4.api-sports.io/football/teams/228.png", contentDescription = "away_logo")
-            }
-            Spacer(
-                modifier = Modifier
-                    .size(10.dp)
-            )
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                Image(
-                    painter = painterResource(id = R.drawable.football_img),
-                    contentDescription = "icon",
-                    modifier = Modifier.size(39.dp)
-                )
-                Spacer(
-                    modifier = Modifier
-                        .padding(10.dp)
-                )
-                Text(text = "2023/10/10 20:30h", Modifier.padding(top = 5.dp))
-            }
-            Spacer(
-                modifier = Modifier
-                    .size(10.dp)
-            )
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                Image(
-                    painter = painterResource(id = R.drawable.stadium),
-                    contentDescription = "stadium_c",
-                    modifier = Modifier.size(39.dp)
-                )
-                Spacer(
-                    modifier = Modifier
-                        .size(10.dp)
-                )
-                Text(text = "Expected 65.000 fans", Modifier.padding(top = 5.dp))
-            }
-            Spacer(
-                modifier = Modifier
-                    .size(10.dp)
-            )
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                Image(
-                    painter = painterResource(id = R.drawable.cloudy),
-                    contentDescription = "cloudy",
-                    modifier = Modifier.size(39.dp)
-                )
-                Spacer(
-                    modifier = Modifier
-                        .size(10.dp)
-                )
-                Text(text = "25º C", Modifier.padding(top = 5.dp))
-            }
-            Spacer(
-                modifier = Modifier
-                    .size(10.dp)
-            )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { //TODO open bet app
-                    }, horizontalArrangement = Arrangement.Center
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.bet),
-                    contentDescription = "odds",
-                    modifier = Modifier.size(39.dp)
-                )
-                Spacer(
-                    modifier = Modifier
-                        .size(10.dp)
-                )
-                Text(text = "Benfica 1.35 - 1.40 Sporting", Modifier.padding(top = 5.dp))
-            }
-
-        }
-    }
-}*/
-/*
-@Composable
-@Preview
-fun test() {
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        val sports = hashSetOf(
-            EventType.FOOTBALL,
-            EventType.FUTSAL,
-            EventType.VOLLEYBALL,
-            EventType.HANDBALL,
-            EventType.HOKEY,
-            EventType.BASKETBALL
-        )
-        var footballCheck = remember { mutableStateOf(false) }
-        var futsalCheck = remember { mutableStateOf(false) }
-        var handballCheck = remember { mutableStateOf(false) }
-        var volleyballCheck = remember { mutableStateOf(false) }
-        var hokeyCheck = remember { mutableStateOf(false) }
-        var basketballCheck = remember { mutableStateOf(false) }
-        val checkboxSize = 1.5f
-        Column(Modifier.fillMaxSize()) {
-            Row(Modifier.fillMaxWidth()) {
-                Text(
-                    text = "Advanced search",
-                    Modifier
-                        .align(Alignment.CenterVertically)
-                        .padding(top = 10.dp)
-                )
-            }
-            Row(Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-            ) {
-                Column {
-                    Text(text = "Football",Modifier.align(Alignment.CenterHorizontally), fontSize = 20.sp)
-                    Text(text = "Handball",Modifier.align(Alignment.CenterHorizontally), fontSize = 20.sp)
-                    Text(text = "Volleyball",Modifier.align(Alignment.CenterHorizontally), fontSize = 20.sp)
-                }
-                Column {
-                    Text(text = "xiu")
-                    Text(text = "xiu")
-                    Text(text = "xiu")
-                }
-            }
-
-            AdvancedSearchRow(
-                checked1Bol = footballCheck,
-                text1 = "Football",
-                textSize1 = 20,
-                text2 = "Futsal",
-                textSize2 = 20,
-                checked2Bol = futsalCheck,
-                checkboxSize = checkboxSize
-            )
-            AdvancedSearchRow(
-                checked1Bol = handballCheck,
-                text1 = "Handball",
-                textSize1 = 20,
-                text2 = "Basketball",
-                textSize2 = 20,
-                checked2Bol = basketballCheck,
-                checkboxSize = checkboxSize
-            )
-            AdvancedSearchRow(
-                checked1Bol = volleyballCheck,
-                text1 = "Volleyball",
-                textSize1 = 20,
-                text2 = "Hokey",
-                textSize2 = 20,
-                checked2Bol = hokeyCheck,
-                checkboxSize = checkboxSize
-            )
-        }
-    }
-}
-
-@Composable
-fun AdvancedSearchRow(checked1Bol : MutableState<Boolean>,text1:String,textSize1:Int,text2:String,textSize2:Int,checked2Bol : MutableState<Boolean>,checkboxSize:Float) {
-    Row(Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly) {
-        Text(text = text1,Modifier.align(Alignment.CenterVertically), fontSize = textSize1.sp)
-        Checkbox(
-            checked = checked1Bol.value,
-            onCheckedChange = { checked1Bol.value = !checked1Bol.value },
-            modifier = Modifier
-                .align(Alignment.CenterVertically)
-                .scale(checkboxSize)
-        )
-        Spacer(modifier = Modifier)
-        Text(text = text2,Modifier.align(Alignment.CenterVertically), fontSize = textSize2.sp)
-        Checkbox(
-            checked = checked2Bol.value,
-            onCheckedChange = { checked2Bol.value = !checked2Bol.value },
-            modifier = Modifier
-                .align(Alignment.CenterVertically)
-                .scale(checkboxSize)
-        )
-    }
-}
-*/
 fun openBetclicApp(context: Context) {
     val packageName = "sport.android.betclic.pt"
 

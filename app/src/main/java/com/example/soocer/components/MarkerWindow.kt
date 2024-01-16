@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -28,8 +29,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,6 +43,8 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat.startActivity
 import coil.compose.AsyncImage
 import com.example.soocer.R
+import com.example.soocer.auxiliary.Global
+import com.example.soocer.data.FirebaseFunctions
 import com.example.soocer.data.MarkerLocations
 import com.example.soocer.data.Type
 import com.example.soocer.events.Events
@@ -323,8 +328,9 @@ fun WindowMarkerDetails(
                         Modifier.padding(top = 5.dp)
                     )
                 }
+                UpvoteOption(eventID = event.id.toString())
                 TicketBuyOption(context, event)
-                ShareEventOption(context,event)
+                ShareEventOption(context, event)
                 if (showBackButton) {
                     Row(horizontalArrangement = Arrangement.Center) {
                         Spacer(modifier = Modifier.weight(.4f)) // This creates a flexible space to push the button to the center
@@ -335,6 +341,37 @@ fun WindowMarkerDetails(
             }
         }
     }
+}
+
+@Composable
+fun UpvoteOption(eventID: String) {
+    var image by remember {
+        mutableStateOf(if (Global.upvotes.contains(eventID)) R.drawable.ic_upvoted else R.drawable.ic_upvote)
+    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth().height(25.dp),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Text(text = "Is this a big game?", fontWeight = FontWeight.Bold)
+        Spacer(Modifier.size(10.dp))
+        Image(
+            modifier = Modifier.clickable {
+                image = if (image == R.drawable.ic_upvoted) R.drawable.ic_upvote else R.drawable.ic_upvoted
+                upvoteClick(eventID)
+            },
+            painter = painterResource(id = image),
+            contentDescription = "buy_ticket_img"
+        )
+    }
+}
+
+fun upvoteClick(eventID: String) {
+    if (Global.upvotes.contains(eventID)) Global.upvotes.remove(eventID) else Global.upvotes.add(
+        eventID
+    )
+    FirebaseFunctions.saveUserUpvotesInFirebase()
+    FirebaseFunctions.changeEventUpvote(eventID,Global.upvotes.contains(eventID))
 }
 
 @Composable
@@ -363,7 +400,7 @@ fun ShareEventOption(appContext: Context, event: Events) {
             .clickable {
                 val date = event.date
                     .toString()
-                    .replace("T", " ")+"h"
+                    .replace("T", " ") + "h"
                 shareContent(
                     context = appContext,
                     subject = "${event.eventType.type} game",
@@ -372,7 +409,7 @@ fun ShareEventOption(appContext: Context, event: Events) {
                 )
             }, horizontalArrangement = Arrangement.Center
     ) {
-        Image(painter = painterResource(id = R.drawable.ic_share), contentDescription ="share_img" )
+        Image(painter = painterResource(id = R.drawable.ic_share), contentDescription = "share_img")
     }
 }
 

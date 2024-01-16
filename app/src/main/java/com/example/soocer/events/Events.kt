@@ -216,11 +216,15 @@ class Events(
             allEvents: MutableList<Events>?,
             filteredEvents: MutableList<Events>?,
             timeFilter: MutableState<String>,
-            currentSearch: MutableList<Events>?
+            currentSearch: MutableList<Events>?,
+            filterDistance: MutableState<String>,
+            userLoc: LatLng
         ) {
 
-            Log.d("filtered events", filteredEvents?.size.toString())
-
+            //Log.d("filtered events 1", filteredEvents?.size.toString())
+            Log.d("loc", userLoc.toString())
+            val distance = getDistance(filterDistance)
+            Log.d("dist", distance.toString())
             val today = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 dateStringToLocalDateTime(LocalDateTime.now().toString().substring(0,16))
             } else {
@@ -242,13 +246,29 @@ class Events(
                     if(event.date.isEqual(today) || (event.date.isAfter(today) && event.date.isBefore(
                             nextWeek
                         ))) {
-                        newList.add(event)
+                        if (getDistanceBetweenTwoPoints(
+                                event.markerLocations.latLng,
+                                userLoc
+                            ) <= distance
+                        ) {
+                            newList.add(event)
+                        }
                     }
                 }
             }
             filteredEvents?.clear()
             newList.forEach { filteredEvents?.add(it) }
+            //Log.d("filtered events 2", filteredEvents?.size.toString())
+        }
 
+        fun getDistance(filterDistance: MutableState<String>) : Float {
+            return when (filterDistance.value) {
+                "0.5km" -> .5f
+                "1km" -> 1f
+                "5km" -> 5f
+                "15km" -> 15f
+                else -> 999999f
+            }
         }
 
     }

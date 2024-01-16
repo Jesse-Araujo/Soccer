@@ -22,14 +22,16 @@ class Global{
         val size = 40
         var userId = ""
         val favSports = hashSetOf<String>()
+        val upvotes = hashSetOf<String>()
     }
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
 fun isYesterday(localDateTime: LocalDateTime): Boolean {
-    val yesterday = LocalDateTime.now().minus(1, ChronoUnit.DAYS)
-    return localDateTime.isAfter(yesterday.toLocalDate().atStartOfDay()) &&
-            localDateTime.isBefore(LocalDateTime.now().toLocalDate().atStartOfDay())
+    val todayStart = LocalDateTime.now().toLocalDate().atStartOfDay()
+    val x = !localDateTime.toLocalDate().isEqual(todayStart.toLocalDate())
+    Log.d("x",x.toString())
+    return x
 }
 
 

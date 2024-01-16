@@ -56,6 +56,12 @@ fun HomeScreen(
             favSports.value = it
         }
     }
+    LaunchedEffect(Unit) {
+        FirebaseFunctions.getUserUpvotedGames() /*{
+            Global.favSports.addAll(it)
+            favSports.value = it
+        }*/
+    }
     Box(modifier = Modifier.fillMaxSize()) {
         Home(favSports, appContext, startService)
         BottomNavigator(navController = navController)

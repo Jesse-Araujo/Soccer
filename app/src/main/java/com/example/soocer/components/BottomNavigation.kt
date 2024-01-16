@@ -33,26 +33,39 @@ fun BottomNavigator(navController: NavController) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_home),
-                    contentDescription = "Home icon",
+                // Home Icon
+                Box(
                     modifier = Modifier
-                        .size(Global.size.dp)
+                        .weight(1f)
                         .clickable {
-                            navController.navigate(
-                                Screens.Home.route
-                            )
-                        })
-                Image(
-                    painter = painterResource(id = R.drawable.ic_map),
-                    contentDescription = "Map icon",
+                            navController.navigate(Screens.Home.route)
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_home),
+                        contentDescription = "Home icon",
+                        modifier = Modifier
+                            .size(Global.size.dp)
+                    )
+                }
+
+                // Map Icon
+                Box(
                     modifier = Modifier
-                        .size(Global.size.dp)
+                        .weight(1f)
                         .clickable {
-                            navController.navigate(
-                                Screens.Map.route
-                            )
-                        })
+                            navController.navigate(Screens.Map.route)
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_map),
+                        contentDescription = "Map icon",
+                        modifier = Modifier
+                            .size(Global.size.dp)
+                    )
+                }
             }
         }
     }
