@@ -100,6 +100,7 @@ class FirebaseFunctions {
                                 getMarker(homeTeam, eventType),
                                 //convertStringToBoolean(importantGame),
                                 importantGame,
+                                upvotes.toInt(),
                                 mutableListOf()
                             )
                         } else {
@@ -121,34 +122,65 @@ class FirebaseFunctions {
 
         fun saveDataInFirebase() {
             val db = FirebaseDatabase.getInstance(firebaseRTDB)
-            db.reference.child("events").setValue(null)
-            db.reference.child("timestamp").setValue(null)
-            Log.d("events save DB",Events.events.toString())
-            Events.events.forEach {
-                val eventsDb = db.reference.child("events").push()
-                eventsDb.child("id").setValue(it.id)
-                eventsDb.child("eventType").setValue(it.eventType.type)
-                eventsDb.child("league").setValue(it.league)
-                eventsDb.child("date").setValue(it.date.toString())
-                eventsDb.child("city").setValue(it.city)
-                eventsDb.child("logo").setValue(it.logo)
-                eventsDb.child("homeTeam").setValue(it.homeTeam)
-                eventsDb.child("homeTeamLogo").setValue(it.homeTeamLogo)
-                eventsDb.child("awayTeam").setValue(it.awayTeam)
-                eventsDb.child("awayTeamLogo").setValue(it.awayTeamLogo)
-                eventsDb.child("markerLocations").setValue("")
-                eventsDb.child("importantGame").setValue(it.importantGame.toString())
-                eventsDb.child("comments").setValue(it.comments.toString())
+            getAllUpvotes(db.reference.child("events")) { map ->
+                db.reference.child("events").setValue(null)
+                db.reference.child("timestamp").setValue(null)
+                Log.d("events save DB",Events.events.toString())
+                Events.events.forEach {
+                    val pair = map[it.id.toLong()]
+                    val eventsDb = db.reference.child("events").push()
+                    eventsDb.child("id").setValue(it.id)
+                    eventsDb.child("eventType").setValue(it.eventType.type)
+                    eventsDb.child("league").setValue(it.league)
+                    eventsDb.child("date").setValue(it.date.toString())
+                    eventsDb.child("city").setValue(it.city)
+                    eventsDb.child("logo").setValue(it.logo)
+                    eventsDb.child("homeTeam").setValue(it.homeTeam)
+                    eventsDb.child("homeTeamLogo").setValue(it.homeTeamLogo)
+                    eventsDb.child("awayTeam").setValue(it.awayTeam)
+                    eventsDb.child("awayTeamLogo").setValue(it.awayTeamLogo)
+                    eventsDb.child("markerLocations").setValue("")
+                    //eventsDb.child("importantGame").setValue(it.importantGame.toString())
+                    //eventsDb.child("upvotes").setValue(it.upvotes)
+                    val bol = (pair?.first ?: 0) >= 2 || convertStringToBoolean(pair?.second ?: "false")
+                    if(it.id == 357373) {
+                        Log.d("first",(pair?.first ?: 0).toString())
+                        Log.d("second",(pair?.second ?: "false").toString())
+                        Log.d("bol",bol.toString())
+                    }
+                    it.importantGame = bol
+                    eventsDb.child("importantGame").setValue(bol.toString())
+                    eventsDb.child("upvotes").setValue(pair?.first ?: 0L)
+                    eventsDb.child("comments").setValue(it.comments.toString())
+                }
+                var timestamp = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    LocalDateTime.now().toString().split(".")[0]
+                } else {
+                    TODO("VERSION.SDK_INT < O")
+                }
+                timestamp = timestamp.substring(0, timestamp.length - 3)
+                db.reference.child("timestamp").setValue(timestamp)
             }
-            var timestamp = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                LocalDateTime.now().toString().split(".")[0]
-            } else {
-                TODO("VERSION.SDK_INT < O")
-            }
-            timestamp = timestamp.substring(0, timestamp.length - 3)
-            db.reference.child("timestamp").setValue(timestamp)
+
         }
 
+        fun getAllUpvotes(eventsDb: DatabaseReference,onFinished: (HashMap<Long, Pair<Long, String>>) -> Unit) {
+            val upvotesBigGameList = hashMapOf<Long,Pair<Long,String>>()
+            eventsDb.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                    for (snapshot in dataSnapshot.children) {
+                        val id = snapshot.child("id").getValue(Long::class.java) ?: continue
+                        val upvotes = snapshot.child("upvotes").getValue(Long::class.java) ?: 0
+                        val importantGame = snapshot.child("importantGame").getValue(String::class.java) ?: continue
+                        upvotesBigGameList[id] = Pair(upvotes,importantGame)
+                    }
+                    onFinished(upvotesBigGameList)
+                }
+
+                override fun onCancelled(databaseError: DatabaseError) {
+                }
+            })
+        }
 
         fun saveUserFavSportsInFirebase(favSports: HashSet<String>) {
             Global.favSports.addAll(favSports)
@@ -171,7 +203,7 @@ class FirebaseFunctions {
                     val favSports = hashSetOf<String>()
                     for (snapshot in dataSnapshot.children) {
                         Log.d("snapshot", snapshot.toString())
-                        //if(snapshot.key != Global.userId) continue
+                        //if(snapshot.key != Global.userID.txt) continue
                         Log.d("user sports", snapshot.toString())
                         Log.d("user sports", snapshot.children.toString())
                         //for (sn in snapshot.children) {

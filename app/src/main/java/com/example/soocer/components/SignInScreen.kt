@@ -98,7 +98,7 @@ fun SignInScreen(
                 onClick = {
                     loading = true
                     //TODO validate input fields
-                    if(email.isNotEmpty() && password.isNotEmpty()) signViewModel.login(email, password){
+                    if(email.isNotEmpty() && password.isNotEmpty()) signViewModel.login(appContext,email, password){
                         CoroutineScope(Dispatchers.Main).launch {
                             //withContext(Dispatchers.Main) {
                             loading = false

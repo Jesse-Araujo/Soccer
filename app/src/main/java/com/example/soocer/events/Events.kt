@@ -46,7 +46,8 @@ class Events(
     val awayTeam: String,
     val awayTeamLogo: String,
     val markerLocations: MarkerLocations,
-    val importantGame: Boolean,
+    var importantGame: Boolean,
+    var upvotes: Int,
     val comments: MutableList<String>,
 ) {
 
@@ -72,6 +73,28 @@ class Events(
         fun getHandballEvents(onFinished: (List<Events>?) -> Unit) {
             CoroutineScope(Dispatchers.IO).launch {
                 val events = HandballAPI.getHandballEvents()
+                if (events != null) {
+                    withContext(Dispatchers.Main) {
+                        onFinished(events)
+                    }
+                }
+            }
+        }
+
+        fun getBasketballEvents(onFinished: (List<Events>?) -> Unit) {
+            CoroutineScope(Dispatchers.IO).launch {
+                val events = BasketballApi.getBasketballEvents()
+                if (events != null) {
+                    withContext(Dispatchers.Main) {
+                        onFinished(events)
+                    }
+                }
+            }
+        }
+
+        fun getVolleyballEvents(onFinished: (List<Events>?) -> Unit) {
+            CoroutineScope(Dispatchers.IO).launch {
+                val events = VolleyballApi.getVolleyballEvents()
                 if (events != null) {
                     withContext(Dispatchers.Main) {
                         onFinished(events)
@@ -149,7 +172,7 @@ class Events(
                     isBigGame(
                         jsonObject1.getJSONObject("teams").getJSONObject("home").getString("name"),
                         jsonObject1.getJSONObject("teams").getJSONObject("away").getString("name")
-                    ), mutableListOf()
+                    ), 0,mutableListOf()
                 )
                 events.add(event)
             }
@@ -218,7 +241,8 @@ class Events(
             timeFilter: MutableState<String>,
             currentSearch: MutableList<Events>?,
             filterDistance: MutableState<String>,
-            userLoc: LatLng
+            userLoc: LatLng,
+            sportsToShow: HashSet<String>
         ) {
 
             //Log.d("filtered events 1", filteredEvents?.size.toString())
@@ -251,7 +275,7 @@ class Events(
                                 userLoc
                             ) <= distance
                         ) {
-                            newList.add(event)
+                            if(sportsToShow.contains(event.eventType.type)) newList.add(event)
                         }
                     }
                 }

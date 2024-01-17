@@ -1,12 +1,17 @@
 package com.example.soocer.components
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.example.soocer.auxiliary.Global
+import com.example.soocer.auxiliary.writeIdToFile
+import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
+import java.io.File
+
 
 sealed interface SignUiState {
     object Success : SignUiState
@@ -18,7 +23,7 @@ class SignViewModel : ViewModel() {
     var signsUiState: SignUiState by mutableStateOf(SignUiState.Loading)
         private set
 
-    fun login(email: String, password: String,onFinished:() -> Unit){
+    fun login(context:Context,email: String, password: String,onFinished:() -> Unit){
         FirebaseAuth
             .getInstance()
             .signInWithEmailAndPassword(email, password)
@@ -32,11 +37,16 @@ class SignViewModel : ViewModel() {
                 Log.d("LOGIN","Inside_login_complete")
                 Log.d("LOGIN","${it.isSuccessful}")
 
+
                 if(it.isSuccessful){
                     SignUiState.Success
                 } else SignUiState.Error
             }.addOnSuccessListener {
                 Log.d("LOGIN","${it.user?.uid}")
+                Log.d("cred",it.credential.toString())
+                Log.d("cred prov",it.credential?.provider.toString())
+                Log.d("prov id",it.additionalUserInfo?.providerId.toString())
+                writeIdToFile(context,it.user?.uid.toString())
                 Global.userId = it.user?.uid.toString()
                 onFinished()
             }

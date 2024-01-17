@@ -33,12 +33,14 @@ fun BottomNavigator(navController: NavController) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                // Home Icon
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .clickable {
-                            navController.navigate(Screens.Home.route)
+                            if (!navController.currentDestination
+                                    .toString()
+                                    .contains(Screens.Home.route)
+                            ) navController.navigate(Screens.Home.route)
                         },
                     contentAlignment = Alignment.Center
                 ) {
@@ -49,13 +51,14 @@ fun BottomNavigator(navController: NavController) {
                             .size(Global.size.dp)
                     )
                 }
-
-                // Map Icon
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .clickable {
-                            navController.navigate(Screens.Map.route)
+                            if (!navController.currentDestination
+                                    .toString()
+                                    .contains(Screens.Map.route)
+                            ) navController.navigate(Screens.Map.route)
                         },
                     contentAlignment = Alignment.Center
                 ) {

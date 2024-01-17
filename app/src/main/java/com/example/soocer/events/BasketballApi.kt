@@ -2,23 +2,19 @@ package com.example.soocer.events
 
 import android.os.Build
 import com.example.soocer.data.MarkerLocations
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONArray
 import org.json.JSONObject
 import java.time.LocalDateTime
 
-class HandballAPI {
-    companion object {
-        //@RequiresApi(Build.VERSION_CODES.O)
-        fun getHandballEvents(): List<Events>? {
-            val apiUrl = "https://v1.handball.api-sports.io"
-            val leagueId = 84
-            val season = "2023"
+class BasketballApi {
+
+    companion object{
+        fun getBasketballEvents(): List<Events>? {
+            val apiUrl = "https://v1.basketball.api-sports.io"
+            val leagueId = 74
+            val season = "2023-2024"
 
             val apiKey = "d0e33784e246dddf42f91ba3633549b8"
 
@@ -31,8 +27,7 @@ class HandballAPI {
                 .build()
 
             val response = client.newCall(request).execute()
-            val events = getLeagueGames(response.body?.string())
-            return events
+            return getLeagueGames(response.body?.string())
         }
 
         fun getLeagueGames(body: String?): List<Events>? {
@@ -45,9 +40,10 @@ class HandballAPI {
             for (i in 0 until jsonArray.length()) {
                 val jsonObject = jsonArray.getJSONObject(i)
                 val event = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
                     Events(
                         jsonObject.getInt("id"),
-                        EventType.HANDBALL,
+                        EventType.BASKETBALL,
                         jsonObject.getJSONObject("league").getString("name"),
                         Events.convertTimestampToTime(
                             jsonObject.getLong("timestamp")
@@ -60,14 +56,14 @@ class HandballAPI {
                         jsonObject.getJSONObject("teams").getJSONObject("away").getString("logo"),
                         MarkerLocations.getClubPavilion(
                             jsonObject.getJSONObject("teams").getJSONObject("home")
-                                .getString("name")
+                                .getString("name"),true
                         ),
                         Events.isBigGame(
                             jsonObject.getJSONObject("teams").getJSONObject("home")
                                 .getString("name"),
                             jsonObject.getJSONObject("teams").getJSONObject("away")
                                 .getString("name")
-                        ),0, mutableListOf()
+                        ), 0,mutableListOf()
                     )
                 } else {
                     return null
@@ -75,8 +71,7 @@ class HandballAPI {
                 events.add(event)
             }
             val currentDate = LocalDateTime.now()
-            val endDate = currentDate.plusDays(60)//default is 8 para 1 semana
-
+            val endDate = currentDate.plusDays(15)
             return events.filter { event ->
                 val eventDate = event.date
                 eventDate.isEqual(currentDate) || (eventDate.isAfter(currentDate) && eventDate.isBefore(

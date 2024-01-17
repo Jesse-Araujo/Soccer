@@ -22,9 +22,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
@@ -44,6 +47,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import com.example.soocer.R
@@ -93,14 +97,17 @@ fun MapScreen(
     navController: NavController,
     appContext: Context
 ) {
-    Log.d("upts",Global.upvotes.toString())
+    Log.d("upts", Global.upvotes.toString())
     val cameraPositionState = rememberCameraPositionState()
     var footballLoading by remember { mutableStateOf(true) }
     var handballLoading by remember { mutableStateOf(true) }
+    var basketballLoading by remember { mutableStateOf(true) }
+    var volleyballLoading by remember { mutableStateOf(true) }
     val allEvents by remember { mutableStateOf<MutableList<Events>?>(mutableListOf()) }
     val filteredEvents by remember { mutableStateOf<MutableList<Events>?>(mutableListOf()) }
     var everythingLoaded by remember { mutableStateOf(false) }
-    everythingLoaded = !footballLoading && !handballLoading
+    everythingLoaded =
+        !footballLoading && !handballLoading && !basketballLoading && !volleyballLoading
     var currentLocation by remember { mutableStateOf<Location?>(null) }
     val gpsIsOnline = remember { mutableStateOf(false) }
     val filterDistance = remember { mutableStateOf("max") }
@@ -113,6 +120,7 @@ fun MapScreen(
     val existingMarkers by remember { mutableStateOf<HashMap<String, MarkerLocations>>(hashMapOf()) }
     val selectedTimeFilter = remember { mutableStateOf("today") }
     val currentSearch by remember { mutableStateOf<MutableList<Events>?>(mutableListOf()) }
+    val sportsToShow by remember { mutableStateOf(Global.favSports.toHashSet()) }
     GPSChecker(appContext) { gpsIsOnline2, loc ->
         if (gpsIsOnline2) {
             if (!gpsIsOnline.value) {
@@ -136,6 +144,8 @@ fun MapScreen(
                     filteredEvents?.addAll(result)
                     footballLoading = false
                     handballLoading = false
+                    basketballLoading = false
+                    volleyballLoading = false
                 } else {
                     Log.d("vou ler da API", "")
                     CoroutineScope(Dispatchers.IO).launch {
@@ -164,6 +174,30 @@ fun MapScreen(
                         }
                     }
                     CoroutineScope(Dispatchers.IO).launch {
+                        Events.getBasketballEvents { result ->
+                            if (!result.isNullOrEmpty()) {
+                                Events.events.addAll(result)
+                                allEvents?.addAll(result)
+                                filteredEvents?.addAll(result)
+                            }
+                            Log.d("tenho a info de basket", Events.events.toString())
+                            log(result)
+                            basketballLoading = false
+                        }
+                    }
+                    CoroutineScope(Dispatchers.IO).launch {
+                        Events.getVolleyballEvents { result ->
+                            if (!result.isNullOrEmpty()) {
+                                Events.events.addAll(result)
+                                allEvents?.addAll(result)
+                                filteredEvents?.addAll(result)
+                            }
+                            Log.d("tenho a info de basket", Events.events.toString())
+                            log(result)
+                            volleyballLoading = false
+                        }
+                    }
+                    CoroutineScope(Dispatchers.IO).launch {
                         while (!everythingLoaded) {
                         }
                         Log.d("Posso salvar", "")
@@ -182,6 +216,8 @@ fun MapScreen(
         if (filteredEvents == null || filteredEvents!!.isEmpty()) filteredEvents?.addAll(Events.events)
         footballLoading = false
         handballLoading = false
+        basketballLoading = false
+        volleyballLoading = false
 
     }
 
@@ -278,11 +314,19 @@ fun MapScreen(
                 state = MarkerState(position = LatLng(lat, long)),
                 title = "You are here",
             )
-            if (!footballLoading && !handballLoading) {
+            if (!footballLoading && !handballLoading && !basketballLoading && !volleyballLoading) {
                 markers.clear()
                 existingMarkers.clear()
                 Log.d("filtered events mapa", filteredEvents?.size.toString())
-                Events.getEventsWithTimeFilter(allEvents,filteredEvents,selectedTimeFilter,currentSearch,filterDistance,LatLng(lat,long))
+                Events.getEventsWithTimeFilter(
+                    allEvents,
+                    filteredEvents,
+                    selectedTimeFilter,
+                    currentSearch,
+                    filterDistance,
+                    LatLng(lat, long),
+                    sportsToShow
+                )
                 Log.d("filtered events mapa", filteredEvents?.size.toString())
                 filteredEvents?.forEach {
                     val marker = it.markerLocations
@@ -330,6 +374,21 @@ fun MapScreen(
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
+            DistanceBox(
+                allEvents = allEvents,
+                filteredEvents = filteredEvents,
+                filterDistance = filterDistance,
+                cameraPositionState = cameraPositionState,
+                lat = lat,
+                long = long,
+            )
+            CenterUserPositionBox(
+                cameraPositionState = cameraPositionState,
+                lat = lat,
+                long = long,
+                showDialog = showDialog,
+                showSearchBar = showSearchBar
+            )
             Column {
                 AutoComplete(
                     modifier = Modifier.align(Alignment.CenterHorizontally),
@@ -353,30 +412,148 @@ fun MapScreen(
                         )
                     }
                 }
-                TimeFilterOptions(selectedTimeFilter,showSearchBar)
+                TimeFilterOptions(selectedTimeFilter, showSearchBar)
+                if(showSearchBar.value) {
+                    SportsFilterButton(
+                        sportsToShow,
+                        cameraPositionState
+                    )
+                }
             }
             if (!gpsIsOnline.value) Text(
                 text = "Turn on GPS",
                 modifier = Modifier.align(Alignment.TopCenter),
                 style = TextStyle(background = Color.Red)
             )
-            DistanceBox(
-                allEvents = allEvents,
-                filteredEvents = filteredEvents,
-                filterDistance = filterDistance,
-                cameraPositionState = cameraPositionState,
-                lat = lat,
-                long = long,
-            )
-            CenterUserPositionBox(
-                cameraPositionState = cameraPositionState,
-                lat = lat,
-                long = long,
-                showDialog = showDialog,
-                showSearchBar = showSearchBar
-            )
+            /*if(!showSportFilterOptions.value) {
+                DistanceBox(
+                    allEvents = allEvents,
+                    filteredEvents = filteredEvents,
+                    filterDistance = filterDistance,
+                    cameraPositionState = cameraPositionState,
+                    lat = lat,
+                    long = long,
+                )
+                CenterUserPositionBox(
+                    cameraPositionState = cameraPositionState,
+                    lat = lat,
+                    long = long,
+                    showDialog = showDialog,
+                    showSearchBar = showSearchBar
+                )
+            }*/
         }
         BottomNavigator(navController = navController)
+    }
+}
+
+@Composable
+fun SportsFilterButton(
+    sportsToShow: HashSet<String>,
+    cameraPositionState: CameraPositionState
+) {
+    val showSportFilterOptions = remember { mutableStateOf(false) }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(end = 16.dp),
+        horizontalArrangement = Arrangement.End
+    ) {
+        Box(
+            modifier = Modifier
+                .size(50.dp)
+                .background(Color.White, shape = CircleShape)
+                .clickable(interactionSource = MutableInteractionSource(), indication = null) {
+                    showSportFilterOptions.value = !showSportFilterOptions.value
+                },
+            contentAlignment = Alignment.CenterEnd
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.filter),
+                contentDescription = "Camera",
+                modifier = Modifier
+                    .size(24.dp)
+                    .align(Alignment.Center)
+            )
+        }
+    }
+    SportsFilterOptions(showSportFilterOptions, sportsToShow, cameraPositionState)
+}
+
+@Composable
+fun SportsFilterOptions(
+    showSportFilterOptions: MutableState<Boolean>,
+    sportsToShow: HashSet<String>,
+    cameraPositionState: CameraPositionState
+) {
+    if (showSportFilterOptions.value) {
+        Box(Modifier.fillMaxSize()) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(.5f)
+                    .background(Color.White)
+                    .align(Alignment.BottomCenter)
+                    .clickable(
+                        interactionSource = MutableInteractionSource(),
+                        indication = null
+                    ) { }
+            ) {
+                Column(
+                    Modifier
+                        .fillMaxHeight()
+                        .padding(top = 15.dp, start = 15.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            showSportFilterOptions.value = false
+                            cameraPositionState.position =
+                                CameraPosition.fromLatLngZoom(cameraPositionState.position.target, cameraPositionState.position.zoom)
+                        },
+                        colors = ButtonDefaults.buttonColors(Color.Transparent),
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_close),
+                            contentDescription = "close_sports_filter_box",
+                            modifier = Modifier.size(25.dp)
+                        )
+                    }
+                    Row(horizontalArrangement = Arrangement.SpaceEvenly) {
+                        CheckSportBox(sportsToShow, EventType.FOOTBALL.type, 23)
+                        CheckSportBox(sportsToShow, EventType.HANDBALL.type, 23)
+                    }
+                    Row(horizontalArrangement = Arrangement.SpaceEvenly) {
+                        CheckSportBox(sportsToShow, EventType.BASKETBALL.type, 23)
+                        CheckSportBox(sportsToShow, EventType.VOLLEYBALL.type, 23)
+                    }
+                    CheckSportBox(sportsToShow, EventType.FUTSAL.type, 23)
+                }
+            }
+        }
+
+    }
+}
+
+@Composable
+fun CheckSportBox(sportsToShow: HashSet<String>, sport: String, size: Int) {
+    val blueColor = Color(0xFF007BFF)
+    var sportSelected by remember { mutableStateOf(sportsToShow.contains(sport)) }
+    Button(
+        modifier = Modifier.width(175.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (sportSelected) blueColor else Color.White,
+            contentColor = if (sportSelected) Color.White else Color.Black
+        ),
+        onClick = {
+            sportSelected = !sportSelected
+            if (sportSelected) sportsToShow.add(sport) else sportsToShow.remove(sport)
+        }) {
+        Text(
+            text = sport,
+            fontSize = size.sp,
+            modifier = Modifier.align(Alignment.CenterVertically),
+            fontWeight = FontWeight.Bold
+        )
     }
 }
 
@@ -385,30 +562,30 @@ fun TimeFilterOptions(
     selectedTimeFilter: MutableState<String>,
     showSearchBar: MutableState<Boolean>
 ) {
-    if(showSearchBar.value) {
+    if (showSearchBar.value) {
         Row(
             modifier = Modifier
                 .horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.Center
         ) {
             Spacer(modifier = Modifier.size(10.dp))
-            TimeFilterButtons("today",selectedTimeFilter){}
+            TimeFilterButtons("today", selectedTimeFilter) {}
             Spacer(modifier = Modifier.size(10.dp))
-            TimeFilterButtons("1 day",selectedTimeFilter){}
+            TimeFilterButtons("1 day", selectedTimeFilter) {}
             Spacer(modifier = Modifier.size(10.dp))
-            TimeFilterButtons("3 days",selectedTimeFilter){}
+            TimeFilterButtons("3 days", selectedTimeFilter) {}
             Spacer(modifier = Modifier.size(10.dp))
-            TimeFilterButtons("5 days",selectedTimeFilter){}
+            TimeFilterButtons("5 days", selectedTimeFilter) {}
             Spacer(modifier = Modifier.size(10.dp))
-            TimeFilterButtons("1 week",selectedTimeFilter){}
+            TimeFilterButtons("1 week", selectedTimeFilter) {}
             Spacer(modifier = Modifier.size(10.dp))
-            TimeFilterButtons("2 weeks",selectedTimeFilter){}
+            TimeFilterButtons("2 weeks", selectedTimeFilter) {}
             Spacer(modifier = Modifier.size(10.dp))
         }
     }
 }
 
 @Composable
-fun TimeFilterButtons(text: String, selectedFilter: MutableState<String>,onFinished: () -> Unit) {
+fun TimeFilterButtons(text: String, selectedFilter: MutableState<String>, onFinished: () -> Unit) {
     val blueColor = Color(0xFF007BFF)
     val isSelected = selectedFilter.value == text
     Button(
@@ -442,9 +619,9 @@ fun CenterUserPositionBox(
         Box(modifier = Modifier
             .align(Alignment.BottomEnd)
             .padding(bottom = 220.dp, end = 10.dp)
-            .size(75.dp)
+            .size(65.dp)
             .background(lightBlueColor, shape = CircleShape)
-            .clickable(interactionSource = MutableInteractionSource(),indication = null) {
+            .clickable(interactionSource = MutableInteractionSource(), indication = null) {
                 cameraPositionState.position =
                     CameraPosition.fromLatLngZoom(LatLng(lat, long), 15f)
                 showSearchBar.value = true
@@ -476,9 +653,9 @@ fun DistanceBox(
         Box(modifier = Modifier
             .align(Alignment.BottomEnd)
             .padding(bottom = 140.dp, end = 10.dp)
-            .size(75.dp)
+            .size(65.dp)
             .background(lightBlueColor, shape = CircleShape)
-            .clickable(interactionSource = MutableInteractionSource(),indication = null) {
+            .clickable(interactionSource = MutableInteractionSource(), indication = null) {
                 changeDistanceFilter(
                     allEvents, filteredEvents, filterDistance, LatLng(lat, long)
                 ) { loc ->
@@ -542,6 +719,9 @@ fun changeDistanceFilter(
 fun getImage(eventType: EventType): Int {
     return when (eventType) {
         EventType.FOOTBALL -> R.drawable.football_img
+        EventType.BASKETBALL -> R.drawable.basketball_marker_window
+        EventType.VOLLEYBALL -> R.drawable.volleyball_marker_window
+        EventType.FUTSAL -> R.drawable.futsal_marker_window
         else -> R.drawable.handball_img
     }
 }
@@ -589,6 +769,7 @@ fun bitmapDescriptorFromVector(
 
     return BitmapDescriptorFactory.fromBitmap(bm)
 }
+
 fun openBetclicApp(context: Context) {
     val packageName = "sport.android.betclic.pt"
 

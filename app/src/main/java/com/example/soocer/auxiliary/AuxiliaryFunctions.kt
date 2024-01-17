@@ -1,12 +1,16 @@
 package com.example.soocer.auxiliary
 
 
+import android.content.Context
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import com.example.soocer.data.MarkerLocations
 import com.example.soocer.events.EventType
 import com.google.android.gms.maps.model.LatLng
+import java.io.File
+import java.io.FileWriter
+import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -91,5 +95,36 @@ fun getTimeFilterValue(time: String) : Long {
         "5 days" -> 5
         "1 week" -> 7
         else -> 14
+    }
+}
+
+fun requireLogin(context: Context): Boolean {
+    val fileName = "userID.txt"
+    val file = File(context.filesDir, fileName)
+
+    if (!file.exists()) {
+        Log.d("FileNotFound", "File $fileName does not exist.")
+        file.createNewFile()
+        return true
+    }
+
+    val content = file.readText()
+    if(content.isEmpty()) return true
+    Global.userId = content
+    Log.d("FileContent", content)
+    return false
+}
+
+fun writeIdToFile(context: Context, id: String) {
+    val fileName = "userID.txt"
+    val file = File(context.filesDir, fileName)
+
+    try {
+        val fileWriter = FileWriter(file, true)
+        fileWriter.append(id)
+        fileWriter.close()
+        Log.d("IdWritten", "ID $id written to file.")
+    } catch (e: Exception) {
+        e.printStackTrace()
     }
 }

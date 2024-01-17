@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.core.app.ActivityCompat
 import androidx.navigation.compose.rememberNavController
 import com.example.soocer.auxiliary.Global
+import com.example.soocer.auxiliary.requireLogin
 import com.example.soocer.ui.theme.SoocerTheme
 
 class MainActivity : ComponentActivity() {
@@ -19,6 +20,7 @@ class MainActivity : ComponentActivity() {
                 Manifest.permission.ACCESS_FINE_LOCATION,
             ), 0
         )
+        val bol = requireLogin(applicationContext)
         setContent {
             SoocerTheme {
                 val navController = rememberNavController()
@@ -28,6 +30,7 @@ class MainActivity : ComponentActivity() {
                     startService = ::startService,
                     startDestination = Screens.Map.route
                 )
+                else if(!bol) NavGraph(navController, applicationContext, startDestination = Screens.Home.route,startService =::startService)
                 else NavGraph(navController, applicationContext, ::startService)
             }
         }

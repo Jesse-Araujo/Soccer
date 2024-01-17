@@ -287,8 +287,6 @@ fun searchPlace(
         }
     }
     if(loc == null) onFinished(false,LatLng(0.0,0.0)) else onFinished(true,loc!!)
-
-    //Log.d("filtered list -> ",filteredEvents.value?.size.toString())
 }
 
 

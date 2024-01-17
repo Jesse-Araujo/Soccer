@@ -103,8 +103,8 @@ fun Home(
             )
             SportCard(
                 size = size,
-                img1 = EventType.HOKEY.type,
-                img2 = EventType.BASKETBALL.type,
+                img1 = EventType.BASKETBALL.type,
+                img2 = EventType.VOLLEYBALL.type,
                 favSports = favSports,
             )
             SportCard(
@@ -243,60 +243,3 @@ fun isServiceRunning(context: Context, serviceClass: Class<*>): Boolean {
     }
     return false
 }
-
-/*fun SportImage(size: Int, img: Int, onclick: () -> Unit) {
-    Image(
-        modifier = Modifier
-            .size(size.dp)
-            .clickable { onclick() },
-        painter = painterResource(id = img),
-        contentDescription = "${img}_img"
-    )
-}*/
-/*
-@Composable
-fun SportCard1(size: Int, img: Int, onclick: (Unit) -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly
-    ) {
-        SportImage(size, img, onclick)
-    }
-}
-
-@Preview
-@Composable
-fun TT() {
-    val size = 220
-    val color = Color(0xFF06A00D)
-    Box(modifier = Modifier.fillMaxSize()) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.TopCenter)
-                .background(color)
-        ) {
-            Text(
-                text = "Sports Events",
-                fontSize = 36.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(
-                    Alignment.Center
-                )
-            )
-        }
-        Column(
-            modifier = Modifier
-                .padding(top = 35.dp)
-                .verticalScroll(rememberScrollState())
-        ) {
-            SportCard1(size = size, img = R.drawable.fut_img, onclick = { Log.d("fut", "") })
-            SportCard1(size = size, img = R.drawable.futs_img, onclick = { Log.d("futs", "") })
-            SportCard1(size = size, img = R.drawable.andebol_img, onclick = { Log.d("hand", "") })
-            SportCard1(size = size, img = R.drawable.volley_img, onclick = { Log.d("volley", "") })
-            SportCard1(size = size, img = R.drawable.basket_img, onclick = { Log.d("bask", "") })
-            SportCard1(size = size, img = R.drawable.tennis_img, onclick = { Log.d("ten", "") })
-        }
-    }
-}
-*/
