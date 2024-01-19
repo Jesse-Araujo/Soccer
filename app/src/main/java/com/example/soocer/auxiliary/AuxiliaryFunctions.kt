@@ -118,7 +118,6 @@ fun requireLogin(context: Context): Boolean {
 fun writeIdToFile(context: Context, id: String) {
     val fileName = "userID.txt"
     val file = File(context.filesDir, fileName)
-
     try {
         val fileWriter = FileWriter(file, true)
         fileWriter.append(id)
@@ -127,4 +126,10 @@ fun writeIdToFile(context: Context, id: String) {
     } catch (e: Exception) {
         e.printStackTrace()
     }
+}
+
+fun clearFile(context: Context) {
+    val file = File(context.filesDir, "userID.txt")
+    file.delete()
+    file.createNewFile()
 }

@@ -7,7 +7,6 @@ import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,9 +39,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat.startActivity
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.soocer.R
+import com.example.soocer.Screens
 import com.example.soocer.auxiliary.Global
 import com.example.soocer.data.FirebaseFunctions
 import com.example.soocer.data.MarkerLocations
@@ -55,6 +55,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.MarkerInfoWindow
 import com.google.maps.android.compose.MarkerState
+import kotlin.math.ceil
 
 @Composable
 fun CustomMarker(
@@ -67,6 +68,7 @@ fun CustomMarker(
     //eventForMarkerWindow: MutableState<Events>,
     eventsForMarkerWindow: MutableState<MutableList<Events>>,
     cameraPositionState: CameraPositionState,
+    navController: NavController
 ) {
     var thereIsBigGame = false
     marker.events.forEach {
@@ -86,7 +88,6 @@ fun CustomMarker(
     MarkerInfoWindow(
         state = MarkerState(position = marker.latLng),
         title = marker.title, //TODO make this disappear when the window is closed
-        //snippet = "Marker in Lisboa",
         icon = icon,
         onClick = {
             //if(marker.events.size == 1) eventForMarkerWindow.value = marker.events[0]
@@ -101,7 +102,11 @@ fun CustomMarker(
 }
 
 @Composable
-fun ShowEventList(context: Context, eventsForMarkerWindow: MutableState<MutableList<Events>>) {
+fun ShowEventList(
+    context: Context,
+    eventsForMarkerWindow: MutableState<MutableList<Events>>,
+    navController: NavController
+) {
     val showOneEvent = remember() { mutableStateOf(false) }
     val selectedEvent = remember { mutableStateOf<Events?>(null) }
     eventsForMarkerWindow.value.sortBy { it.date }
@@ -110,7 +115,7 @@ fun ShowEventList(context: Context, eventsForMarkerWindow: MutableState<MutableL
             Box(
                 modifier = Modifier
                     .padding(top = 15.dp)
-                    .fillMaxWidth(.8f)
+                    .fillMaxWidth(.9f)
                     .fillMaxHeight(.4f)
                     .background(
                         color = Color.White,
@@ -142,7 +147,7 @@ fun ShowEventList(context: Context, eventsForMarkerWindow: MutableState<MutableL
             }
         }
     } else selectedEvent.value?.let {
-        WindowMarkerDetails(event = it, context = context, showBackButton = true) {
+        WindowMarkerDetails(event = it, context = context, showBackButton = true, navController) {
             showOneEvent.value = false
         }
     }
@@ -188,13 +193,14 @@ fun WindowMarkerDetails(
     event: Events,
     context: Context,
     showBackButton: Boolean = false,
+    navController: NavController,
     onDismiss: () -> Unit
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
                 .padding(top = 15.dp)
-                .fillMaxWidth(.8f)
+                .fillMaxWidth(.9f)
                 .fillMaxHeight(.4f)
                 .background(
                     color = Color.White,
@@ -295,7 +301,7 @@ fun WindowMarkerDetails(
                             .size(10.dp)
                     )
                     val text =
-                        if (weather.value.main != WeatherType.ERROR) "${weather.value.temp} C" else ""
+                        if (weather.value.main != WeatherType.ERROR) "${ceil(weather.value.temp).toInt()}º C" else ""
                     Text(text = text, Modifier.padding(top = 5.dp))
                 }
                 Spacer(
@@ -331,6 +337,7 @@ fun WindowMarkerDetails(
                 UpvoteOption(eventID = event.id.toString())
                 TicketBuyOption(context, event)
                 ShareEventOption(context, event)
+                showReviewsOfMarker(event, navController)
                 if (showBackButton) {
                     Row(horizontalArrangement = Arrangement.Center) {
                         Spacer(modifier = Modifier.weight(.4f)) // This creates a flexible space to push the button to the center
@@ -344,20 +351,29 @@ fun WindowMarkerDetails(
 }
 
 @Composable
+fun showReviewsOfMarker(event: Events, navController: NavController) {
+    Text(
+        text = "Review ${event.markerLocations.type}",
+        modifier = Modifier.clickable { navController.navigate(Screens.Review.route) })
+}
+
+@Composable
 fun UpvoteOption(eventID: String) {
     var image by remember {
         mutableStateOf(if (Global.upvotes.contains(eventID)) R.drawable.ic_upvoted else R.drawable.ic_upvote)
     }
     Row(
         modifier = Modifier
-            .fillMaxWidth().height(25.dp),
+            .fillMaxWidth()
+            .height(25.dp),
         horizontalArrangement = Arrangement.Center
     ) {
         Text(text = "Is this a big game?", fontWeight = FontWeight.Bold)
         Spacer(Modifier.size(10.dp))
         Image(
             modifier = Modifier.clickable {
-                image = if (image == R.drawable.ic_upvoted) R.drawable.ic_upvote else R.drawable.ic_upvoted
+                image =
+                    if (image == R.drawable.ic_upvoted) R.drawable.ic_upvote else R.drawable.ic_upvoted
                 upvoteClick(eventID)
             },
             painter = painterResource(id = image),
@@ -371,7 +387,7 @@ fun upvoteClick(eventID: String) {
         eventID
     )
     FirebaseFunctions.saveUserUpvotesInFirebase()
-    FirebaseFunctions.changeEventUpvote(eventID,Global.upvotes.contains(eventID))
+    FirebaseFunctions.changeEventUpvote(eventID, Global.upvotes.contains(eventID))
 }
 
 @Composable

@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.soocer.auxiliary.Global
 import com.example.soocer.data.FirebaseFunctions
 import com.example.soocer.data.MarkerLocations
@@ -33,7 +34,8 @@ fun Map(cameraPositionState : CameraPositionState,
         filteredEvents : MutableList<Events>?,
         appContext :Context,
         currentMarker : MutableState<MarkerLocations?>,
-        eventsForMarkerWindow : MutableState<MutableList<Events>>
+        eventsForMarkerWindow : MutableState<MutableList<Events>>,
+        navController: NavController
         ) {
     GoogleMap(
         modifier = Modifier
@@ -85,7 +87,8 @@ fun Map(cameraPositionState : CameraPositionState,
                     currentMarker,
                     //eventForMarkerWindow,
                     eventsForMarkerWindow,
-                    cameraPositionState
+                    cameraPositionState,
+                    navController
                 )
             }
         } else {

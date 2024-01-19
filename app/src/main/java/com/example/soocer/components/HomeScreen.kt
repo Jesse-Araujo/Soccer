@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.soocer.R
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
 import androidx.compose.material3.Switch
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -35,7 +36,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.painterResource
+import com.example.soocer.Screens
 import com.example.soocer.auxiliary.Global
+import com.example.soocer.auxiliary.clearFile
 import com.example.soocer.data.FirebaseFunctions
 import com.example.soocer.events.EventType
 import com.example.soocer.location.LocationService
@@ -57,13 +60,10 @@ fun HomeScreen(
         }
     }
     LaunchedEffect(Unit) {
-        FirebaseFunctions.getUserUpvotedGames() /*{
-            Global.favSports.addAll(it)
-            favSports.value = it
-        }*/
+        FirebaseFunctions.getUserUpvotedGames()
     }
     Box(modifier = Modifier.fillMaxSize()) {
-        Home(favSports, appContext, startService)
+        Home(favSports, appContext, startService,navController)
         BottomNavigator(navController = navController)
     }
 }
@@ -73,7 +73,8 @@ fun HomeScreen(
 fun Home(
     favSports: MutableState<HashSet<String>>,
     appContext: Context,
-    startService: (Intent) -> ComponentName?
+    startService: (Intent) -> ComponentName?,
+    navController: NavController
 ) {
     if (Global.favSports.isNotEmpty()) favSports.value = Global.favSports
     val size = 150
@@ -100,19 +101,30 @@ fun Home(
                 img1 = EventType.FOOTBALL.type,
                 img2 = EventType.HANDBALL.type,
                 favSports = favSports,
+                navController = navController
             )
             SportCard(
                 size = size,
                 img1 = EventType.BASKETBALL.type,
                 img2 = EventType.VOLLEYBALL.type,
                 favSports = favSports,
+                navController = navController
             )
             SportCard(
                 size = size,
                 img1 = EventType.TENNIS.type,
                 img2 = EventType.FUTSAL.type,
                 favSports = favSports,
+                navController = navController
             )
+            Button(onClick = {
+                Global.favSports.clear()
+                Global.userId = ""
+                clearFile(appContext)
+                navController.navigate(Screens.SignIn.route)
+            }) {
+                Text(text = "Log out")
+            }
             LocationServiceControls(appContext, startService)
         }
     }
@@ -123,25 +135,25 @@ fun SportCard(
     size: Int,
     img1: String,
     img2: String,
-    favSports: MutableState<HashSet<String>>,
+    favSports: MutableState<HashSet<String>>,navController: NavController
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        SportImage(size, img1, favSports)
-        SportImage(size, img2, favSports)
+        SportImage(size, img1, favSports,navController)
+        SportImage(size, img2, favSports,navController)
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SportImage(
-    size: Int, sport: String, favSports: MutableState<HashSet<String>>,
+    size: Int, sport: String, favSports: MutableState<HashSet<String>>,navController: NavController
 ) {
     var show by remember { mutableStateOf(false) }
     show = favSports.value.contains(sport)
-    Box() {
+    Box {
         if (show) {
             Image(
                 painter = painterResource(id = R.drawable.star),
@@ -153,7 +165,7 @@ fun SportImage(
             modifier = Modifier
                 .size(size.dp)
                 .combinedClickable(
-                    onClick = { onSportClick(sport) },
+                    onClick = { onSportClick(sport,navController) },
                     onLongClick = {
                         Log.d("show", show.toString())
                         show = !show
@@ -167,8 +179,11 @@ fun SportImage(
     }
 }
 
-fun onSportClick(sport: String) {
-    Log.d(sport, "")
+fun onSportClick(sport: String,navController: NavController) {
+    navController.navigate(Screens.Map.route.replace(
+        oldValue = "{sport}",
+        newValue = sport)
+    )
 }
 
 fun onSportLongClick(
@@ -206,8 +221,12 @@ fun LocationServiceControls(appContext: Context, startService: (Intent) -> Compo
             )
         )
     }
-    Row (modifier = Modifier.fillMaxWidth().padding(end = 5.dp), horizontalArrangement = Arrangement.End){
-        Text(text = "Notifications",modifier = Modifier.align(Alignment.CenterVertically).padding(end = 5.dp))
+    Row (modifier = Modifier
+        .fillMaxWidth()
+        .padding(end = 5.dp), horizontalArrangement = Arrangement.End){
+        Text(text = "Notifications",modifier = Modifier
+            .align(Alignment.CenterVertically)
+            .padding(end = 5.dp))
             Switch(
                 checked = checked,
                 onCheckedChange = {

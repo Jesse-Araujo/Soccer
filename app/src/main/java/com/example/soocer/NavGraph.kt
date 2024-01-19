@@ -4,14 +4,17 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavDestination
 import androidx.navigation.NavHostController
 
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.soocer.auxiliary.Global
 import com.example.soocer.components.HomeScreen
 import com.example.soocer.components.MapScreen
+import com.example.soocer.components.ReviewMarkerWindow
 import com.example.soocer.components.SignInScreen
 
 @Composable
@@ -42,10 +45,15 @@ fun NavGraph(
                 startService = startService
             )
         }
-        composable(route = Screens.Map.route) {
+        composable(route = Screens.Map.route + "?sport={sport}") {navBackStack ->
+            val sport = navBackStack.arguments?.getString("sport")
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                MapScreen(navController = navController, appContext)
+                if(sport == null || sport == "{sport}") MapScreen(navController, appContext)
+                else MapScreen(navController, appContext, hashSetOf(sport).toHashSet())
             }
+        }
+        composable(route = Screens.Review.route) {
+            ReviewMarkerWindow(navController)
         }
     }
 }

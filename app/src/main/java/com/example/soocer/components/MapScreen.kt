@@ -95,9 +95,9 @@ fun log(events: List<Events>?) {
 @Composable
 fun MapScreen(
     navController: NavController,
-    appContext: Context
+    appContext: Context,
+    sportsToShow: HashSet<String> = Global.favSports.toHashSet()
 ) {
-    Log.d("upts", Global.upvotes.toString())
     val cameraPositionState = rememberCameraPositionState()
     var footballLoading by remember { mutableStateOf(true) }
     var handballLoading by remember { mutableStateOf(true) }
@@ -120,7 +120,7 @@ fun MapScreen(
     val existingMarkers by remember { mutableStateOf<HashMap<String, MarkerLocations>>(hashMapOf()) }
     val selectedTimeFilter = remember { mutableStateOf("today") }
     val currentSearch by remember { mutableStateOf<MutableList<Events>?>(mutableListOf()) }
-    val sportsToShow by remember { mutableStateOf(Global.favSports.toHashSet()) }
+    val sportsToShow by remember { mutableStateOf(sportsToShow.toHashSet()/*Global.favSports.toHashSet()*/) }
     GPSChecker(appContext) { gpsIsOnline2, loc ->
         if (gpsIsOnline2) {
             if (!gpsIsOnline.value) {
@@ -353,7 +353,8 @@ fun MapScreen(
                         currentMarker,
                         //eventForMarkerWindow,
                         eventsForMarkerWindow,
-                        cameraPositionState
+                        cameraPositionState,
+                        navController
                     )
                 }
             } else {
@@ -363,10 +364,11 @@ fun MapScreen(
         }
         if (showDialog.value) {
             if (eventsForMarkerWindow.value.size > 1) {
-                ShowEventList(appContext, eventsForMarkerWindow)
+                ShowEventList(appContext, eventsForMarkerWindow,navController)
             } else {
                 WindowMarkerDetails(event = eventsForMarkerWindow.value[0],
                     appContext,
+                    navController = navController,
                     onDismiss = { showDialog.value = false })
                 //eventsForMarkerWindow.value = mutableListOf()
             }

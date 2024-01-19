@@ -172,7 +172,7 @@ class Events(
                     isBigGame(
                         jsonObject1.getJSONObject("teams").getJSONObject("home").getString("name"),
                         jsonObject1.getJSONObject("teams").getJSONObject("away").getString("name")
-                    ), 0,mutableListOf()
+                    ), 0, mutableListOf()
                 )
                 events.add(event)
             }
@@ -246,36 +246,56 @@ class Events(
         ) {
 
             //Log.d("filtered events 1", filteredEvents?.size.toString())
-            Log.d("loc", userLoc.toString())
             val distance = getDistance(filterDistance)
-            Log.d("dist", distance.toString())
             val today = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                dateStringToLocalDateTime(LocalDateTime.now().toString().substring(0,16))
+                dateStringToLocalDateTime(LocalDateTime.now().toString().substring(0, 16))
             } else {
                 TODO("VERSION.SDK_INT < O")
             }
 
             val time = getTimeFilterValue(timeFilter.value)
 
-            val nextWeek = today.plus(time, ChronoUnit.DAYS)
+            val maxTime = today.plus(time, ChronoUnit.DAYS)
 
 
             val ids = hashSetOf<String>()
-            if(currentSearch?.isEmpty() == true) allEvents?.forEach { ids.add("${it.id}+${it.eventType.type}") }
+            if (currentSearch?.isEmpty() == true) allEvents?.forEach { ids.add("${it.id}+${it.eventType.type}") }
             else currentSearch?.forEach { ids.add("${it.id}+${it.eventType.type}") }
             val newList = mutableListOf<Events>()
             allEvents?.forEach { event ->
                 val id = "${event.id}+${event.eventType.type}"
-                if(ids.contains(id)) {
-                    if(event.date.isEqual(today) || (event.date.isAfter(today) && event.date.isBefore(
-                            nextWeek
-                        ))) {
+                if (ids.contains(id)) {
+                    if (event.eventType.type == "Football" && (/*event.homeTeam == "Vizela" ||*/ event.homeTeam == "Benfica")) {
+                        Log.d("event", event.toString())
+                        Log.d("event date", event.date.toString())
+                        Log.d("time", time.toString())
+                        Log.d("maxTime", maxTime.toString())
+                        Log.d("date hoje", today.toString())
+                        Log.d(
+                            "hoje?",
+                            event.date.toLocalDate().isEqual(today.toLocalDate()).toString()
+                        )
+                        Log.d(
+                            "depois de hoje?",
+                            event.date.toLocalDate().isAfter(today.toLocalDate()).toString()
+                        )
+                        Log.d(
+                            "antes do maxTime?",
+                            event.date.toLocalDate().isBefore(maxTime.toLocalDate()).toString()
+                        )
+                    }
+                    if (event.date.toLocalDate()
+                            .isEqual(today.toLocalDate()) || (event.date.toLocalDate()
+                            .isAfter(today.toLocalDate()) && (event.date.toLocalDate().isBefore(
+                            maxTime.toLocalDate()) || event.date.toLocalDate().isEqual(maxTime.toLocalDate())
+                        ))
+                    ) {
                         if (getDistanceBetweenTwoPoints(
                                 event.markerLocations.latLng,
                                 userLoc
                             ) <= distance
                         ) {
-                            if(sportsToShow.contains(event.eventType.type)) newList.add(event)
+                            if (sportsToShow.contains(event.eventType.type)) newList.add(event)
                         }
                     }
                 }
@@ -285,7 +305,7 @@ class Events(
             //Log.d("filtered events 2", filteredEvents?.size.toString())
         }
 
-        fun getDistance(filterDistance: MutableState<String>) : Float {
+        fun getDistance(filterDistance: MutableState<String>): Float {
             return when (filterDistance.value) {
                 "0.5km" -> .5f
                 "1km" -> 1f
