@@ -5,20 +5,17 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
-import android.os.Bundle
 import android.util.Base64
 import java.io.ByteArrayOutputStream
 import android.util.Log
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.compose.setContent
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
@@ -41,10 +38,12 @@ import java.io.IOException
 
 
 @Composable
-fun PhotoSelectorView(context: Context,bitmap : MutableState<Bitmap?>,maxSelectionCount: Int = 1) {
-    var selectedImages by remember {
-        mutableStateOf<List<Uri?>>(emptyList())
+fun PhotoSelectorView(context: Context,bitmapFromUser : MutableState<Bitmap?>,maxSelectionCount: Int = 1) {
+    var bitmap by remember {
+        //mutableStateOf<List<Uri?>>(emptyList())
+        mutableStateOf(bitmapFromUser)
     }
+    //if(selectedImages.isEmpty()) selectedImages = listOf(bitmap.value)
 
     val buttonText = if (maxSelectionCount > 1) {
         "Select up to $maxSelectionCount photos"
@@ -55,12 +54,13 @@ fun PhotoSelectorView(context: Context,bitmap : MutableState<Bitmap?>,maxSelecti
     val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { uri ->
-            selectedImages = listOf(uri)
-            if(uri != null && selectedImages.isNotEmpty()){
+            //selectedImages = listOf(uri)
+            if(uri != null) bitmap.value = uriToBitmap(context,uri)
+            /*if(uri != null && selectedImages.isNotEmpty()){
                 if(selectedImages[0] != null){
                     bitmap.value = uriToBitmap(context, selectedImages[0]!!)
                 }
-            }
+            }*/
 
             Log.d("uri",uri.toString())
         }
@@ -72,7 +72,12 @@ fun PhotoSelectorView(context: Context,bitmap : MutableState<Bitmap?>,maxSelecti
         } else {
             2
         }),
-        onResult = { uris -> selectedImages = uris }
+        onResult = { uris ->
+            if(uris.isNotEmpty()) {
+                bitmap.value = uriToBitmap(context,uris[0])
+            }
+           // selectedImages = uris
+     }
     )
 
     fun launchPhotoPicker() {
@@ -97,23 +102,23 @@ fun PhotoSelectorView(context: Context,bitmap : MutableState<Bitmap?>,maxSelecti
             Text(buttonText)
         }
 
-        ImageLayoutView(context,selectedImages = selectedImages)
+        ImageLayoutView(context,bitmap = bitmap.value)
     }
 }
 
 @Composable
-fun ImageLayoutView(context: Context,selectedImages: List<Uri?>) {
-    if(selectedImages.isNotEmpty()) {
+fun ImageLayoutView(context: Context,bitmap: Bitmap?/*List<Uri?>*/) {
+    if(/*selectedImages.isNotEmpty()*/ bitmap != null) {
         //LazyRow {
         //items(selectedImages) { uri ->
-        if(selectedImages[0] != null) {
+        //if(selectedImages[0] != null) {
             AsyncImage(
-                model = uriToBitmap(context,selectedImages[0]!!),//selectedImages[0],
+                model = bitmap,//selectedImages[0],
                 contentDescription = null,
-                modifier = Modifier.fillMaxWidth()/*width(350.dp)*/.height(200.dp),//.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth()/*width(350.dp)*/.height(200.dp).padding(top = 15.dp, bottom = 15.dp),//.fillMaxWidth(),
                 contentScale = ContentScale.Fit
             )
-        }
+       //}
 
         // }
         //}
@@ -142,10 +147,3 @@ fun stringToBitmap(encodedString: String): Bitmap? {
     val decodedBytes = Base64.decode(encodedString, Base64.DEFAULT)
     return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
 }
-/*
-fun bitmapToString(bitmap: Bitmap): String {
-    val outputStream = ByteArrayOutputStream()
-    bitmap.compress(Bitmap.CompressFormat.JPEG, 25, outputStream)
-    val byteArray = outputStream.toByteArray()
-    return org.apache.commons.codec.binary.Base64().encode(byteArray).toString(Charsets.UTF_8)
-}*/

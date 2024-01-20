@@ -436,7 +436,7 @@ class FirebaseFunctions {
                     if (!found) {
                         onFinished(
                             Review("", 5, 5, 5, 5, "", ""),
-                            mutableListOf(Triple("","",null))
+                            emptyList<Triple<String,String,Bitmap?>>().toMutableList()
                             //emptyList<String>().toHashSet(),
                             //emptyList<Bitmap>().toMutableList()
                         )
@@ -450,7 +450,7 @@ class FirebaseFunctions {
         }
 
 
-        fun saveUserReview(review: Review) {
+        fun saveUserReview(review: Review,onFinished: () -> Unit) {
             val db = FirebaseDatabase.getInstance(firebaseRTDB)
             val userDb = db.reference.child("markers")
             var found = false
@@ -493,6 +493,7 @@ class FirebaseFunctions {
                             break
                         }
                     }
+                    onFinished()
                 }
 
                 override fun onCancelled(databaseError: DatabaseError) {

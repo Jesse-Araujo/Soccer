@@ -352,11 +352,11 @@ fun WindowMarkerDetails(
 
 @Composable
 fun showReviewsOfMarker(event: Events, navController: NavController) {
-    Text(
-        text = "Review ${event.markerLocations.type}",
-        modifier = Modifier.clickable { navController.navigate(Screens.Review.route.replace(
-            oldValue = "{markerName}",
-            newValue = event.markerLocations.title)) })
+    Button(onClick = { navController.navigate(Screens.Review.route.replace(
+        oldValue = "{markerName}",
+        newValue = event.markerLocations.title)) }) {
+        Text(text = "Review ${event.markerLocations.type}")
+    }
 }
 
 @Composable

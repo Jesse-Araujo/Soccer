@@ -50,6 +50,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -160,98 +161,82 @@ fun MarkerReview(
             Text(text = markerName, fontSize = 25.sp, fontWeight = FontWeight.Bold,modifier = Modifier.padding(bottom = 15.dp))
             Text(text = "Overall review of this place by our users")
             StarRatingSample(globalRating, false)
-            Text(text = "Comfort")
+            Text(text = "Comfort", textAlign = TextAlign.Start)
             StarRatingSample(comfort, false)
             Text(text = "Accessibility")
             StarRatingSample(accessibility, false)
             Text(text = "Quality")
             StarRatingSample(quality, false)
-            Text(text = "Comments...")
+            Text(text = "User reviews")
             ReviewsBox(reviews = reviews.value)
-
-            Text(
-                text = "Make your rating",
-                modifier = Modifier.clickable { showOverallRating.value = false })
+            Button(onClick = { showOverallRating.value = false }) {
+                Text(text = "Make your rating")
+            }
         }
     }
 }
 
 @Composable
 fun ReviewsBox(reviews: MutableList<Triple<String,String,Bitmap?>>) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(15.dp)
-    ) {
-        LazyColumn(modifier = Modifier
-            .fillMaxWidth()
-            .height(280.dp)
-            .padding(bottom = 15.dp), state = rememberLazyListState()
-            , verticalArrangement = Arrangement.Center) {
-            items(reviews.toList(),key = { it.first+it.second }) { review ->
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(bottom = 15.dp)
-                        .background(
-                            color = Color.White, // Background color of the card
-                            shape = RoundedCornerShape(16.dp) // Adjust the corner radius as needed
-                        )
-                        .border(
-                            width = 2.dp, // Border width
-                            color = MaterialTheme.colorScheme.background, // Border color
-                            shape = RoundedCornerShape(16.dp) // Adjust the corner radius to match the background
-                        )
-                ) {
-                    Column( modifier = Modifier
-                        .padding(bottom = 15.dp)
-                        .fillMaxSize()) {
-                        Row(Modifier.padding(top = 10.dp, start = 10.dp)) {
-                            Image(painter = painterResource(id = R.drawable.ic_user), contentDescription = "ic_user",Modifier.size(25.dp))
-                            Text(text = review.first)
-                            Spacer(modifier = Modifier.size(10.dp))
-                            Image(painter = painterResource(id = R.drawable.star), contentDescription = "ic_star",Modifier.size(20.dp))
+    Log.d("reviews size",reviews.size.toString())
+    Log.d("reviews",reviews.toString())
+    if(reviews.isNotEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(15.dp)
+        ) {
+            LazyColumn(modifier = Modifier
+                .fillMaxWidth()
+                .height(380.dp)
+                .padding(bottom = 15.dp), state = rememberLazyListState()
+                , verticalArrangement = Arrangement.Center) {
+                items(reviews.toList(),key = { it.first+it.second }) { review ->
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = 15.dp)
+                            .background(
+                                color = Color.White, // Background color of the card
+                                shape = RoundedCornerShape(16.dp) // Adjust the corner radius as needed
+                            )
+                            .border(
+                                width = 2.dp, // Border width
+                                color = MaterialTheme.colorScheme.background, // Border color
+                                shape = RoundedCornerShape(16.dp) // Adjust the corner radius to match the background
+                            )
+                    ) {
+                        Column( modifier = Modifier
+                            .padding(bottom = 15.dp)
+                            .fillMaxSize()) {
+                            Row(Modifier.padding(top = 10.dp, start = 10.dp)) {
+                                Image(painter = painterResource(id = R.drawable.ic_user), contentDescription = "ic_user",Modifier.size(25.dp))
+                                Text(text = review.first,modifier = Modifier.padding(start = 10.dp, end = 5.dp))
+                                //Spacer(modifier = Modifier.size(10.dp))
+                                Image(painter = painterResource(id = R.drawable.star), contentDescription = "ic_star",Modifier.size(20.dp))
+                            }
+                            Text(text = review.second, modifier = Modifier.padding(16.dp))
+                            if(review.third != null) {
+                                AsyncImage(
+                                    model = review.third,
+                                    contentDescription = review.first+review.second,
+                                    modifier = Modifier
+                                        .padding(start = 25.dp, end = 25.dp)
+                                        .height(220.dp)
+                                        .width(350.dp),
+                                    alignment = Alignment.Center,
+                                    contentScale = ContentScale.Fit
+                                )
+                            }
                         }
-                        Text(text = review.second, modifier = Modifier.padding(16.dp))
-                        AsyncImage(
-                            model = review.third,
-                            contentDescription = review.first+review.second,
-                            modifier = Modifier
-                                .padding(start = 25.dp,end = 25.dp)
-                                .height(220.dp)
-                                .width(350.dp),
-                            alignment = Alignment.Center,
-                            contentScale = ContentScale.Fit
-                        )
                     }
                 }
             }
         }
     }
+
 }
 
-@Composable
-fun PhotosList(photos: MutableList<Bitmap>) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(15.dp)
-            .height(150.dp)
-    ) {
-        LazyRow {
-            items(photos.toList()) { photo ->
-                AsyncImage(
-                    model = photo,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .width(250.dp)
-                        .height(120.dp),
-                    contentScale = ContentScale.Fit
-                )
-            }
-        }
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -367,11 +352,13 @@ fun submit(
                     currentReview.comment,
                     currentReview.photo
                 )
-            )
-            navController.popBackStack(Screens.Review.route,true)
-            navController.navigate(Screens.Review.route.replace(
-                oldValue = "{markerName}",
-                newValue = markerName))
+            ) {
+                navController.popBackStack(Screens.Review.route,true)
+                navController.navigate(Screens.Review.route.replace(
+                    oldValue = "{markerName}",
+                    newValue = markerName))
+            }
+
         }
     }
 
