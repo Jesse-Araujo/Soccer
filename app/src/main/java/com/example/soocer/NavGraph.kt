@@ -4,14 +4,11 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.util.Log
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavDestination
 import androidx.navigation.NavHostController
 
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.soocer.auxiliary.Global
 import com.example.soocer.components.HomeScreen
 import com.example.soocer.components.MapScreen
 import com.example.soocer.components.ReviewMarkerWindow
@@ -52,8 +49,9 @@ fun NavGraph(
                 else MapScreen(navController, appContext, hashSetOf(sport).toHashSet())
             }
         }
-        composable(route = Screens.Review.route) {
-            ReviewMarkerWindow(navController)
+        composable(route = Screens.Review.route+ "?markerName={markerName}") {navBackStack ->
+            val markerName = navBackStack.arguments?.getString("markerName") ?: ""
+            ReviewMarkerWindow(navController,appContext,markerName)
         }
     }
 }

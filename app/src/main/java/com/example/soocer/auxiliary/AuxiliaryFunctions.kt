@@ -15,6 +15,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import kotlin.math.atan2
+import kotlin.math.ceil
 import kotlin.math.cos
 import kotlin.math.pow
 import kotlin.math.sin
@@ -132,4 +133,26 @@ fun clearFile(context: Context) {
     val file = File(context.filesDir, "userID.txt")
     file.delete()
     file.createNewFile()
+}
+
+fun updateAverage(currentAverage:Int,numbersUsed : Int,oldNumber:Int, newNumber : Int) : Int{
+    Log.d("currentAverage",currentAverage.toString())
+    Log.d("numbersUsed",numbersUsed.toString())
+    Log.d("oldNumber",oldNumber.toString())
+    Log.d("newNumber",newNumber.toString())
+    var x = ((currentAverage * numbersUsed) - oldNumber + newNumber).toDouble()
+    x /= numbersUsed
+    return ceil(x).toInt()
+}
+
+fun newAverage(currentAverage:Int,numbersUsed : Int, newNumber : Int) : Int{
+    Log.d("currentAverage",currentAverage.toString())
+    Log.d("numbersUsed",numbersUsed.toString())
+    Log.d("newNumber",newNumber.toString())
+    var x : Double = ((currentAverage*numbersUsed) + newNumber).toDouble()
+    Log.d("x",x.toString())
+    x /= numbersUsed+1
+    Log.d("x",x.toString())
+    Log.d("x",ceil(x).toString())
+    return ceil(x).toInt()
 }

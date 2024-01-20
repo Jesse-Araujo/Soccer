@@ -72,6 +72,7 @@ dependencies {
     implementation("com.google.android.libraries.places:places:3.3.0")
     implementation("com.google.firebase:firebase-database:20.3.0")
     implementation("com.google.android.gms:play-services-wallet:19.2.1")
+    implementation("com.google.firebase:firebase-crashlytics-buildtools:2.9.9")
 
 
     testImplementation("junit:junit:4.13.2")
