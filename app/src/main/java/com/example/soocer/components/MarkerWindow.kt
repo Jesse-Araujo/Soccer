@@ -222,13 +222,13 @@ fun WindowMarkerDetails(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    AsyncImage(model = event.homeTeamLogo, contentDescription = "home_logo")
+                    AsyncImage(model = event.homeTeamLogo, contentDescription = "home_logo", modifier = Modifier.size(50.dp))
                     Text(
                         text = "${event.homeTeam} vs ${event.awayTeam}",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
-                    AsyncImage(model = event.awayTeamLogo, contentDescription = "away_logo")
+                    AsyncImage(model = event.awayTeamLogo, contentDescription = "away_logo", modifier = Modifier.size(50.dp))
                 }
                 Spacer(
                     modifier = Modifier

@@ -15,7 +15,7 @@ class OddAPI {
 
     companion object {
 
-        fun getFootballOdd(eventId: Int, uiVal: MutableState<Pair<String, String>>, event: Events) {
+        fun getOdds(uiVal: MutableState<Pair<String, String>>, event: Events, apiUrl : String, season : String = "2023") {
 
             //TODO tirar isto
             Log.d("odds", "poupar api")
@@ -24,8 +24,6 @@ class OddAPI {
             event.awayOdd = "xiu"
             return
 
-            val apiUrl = "https://v3.football.api-sports.io"
-            val season = "2023"
             val bookmaker = 6
 
             val apiKey = "d0e33784e246dddf42f91ba3633549b8"
@@ -33,7 +31,7 @@ class OddAPI {
             val client = OkHttpClient()
 
             val request = Request.Builder()
-                .url("$apiUrl/odds?fixture=$eventId&season=$season")
+                .url("$apiUrl/odds?fixture=${event.id}&season=$season")
                 //.url("$apiUrl/odds?fixture=$eventId&bookmaker=$bookmaker&season=$season")
                 .header("x-rapidapi-host", apiUrl)
                 .header("x-rapidapi-key", apiKey)
@@ -41,7 +39,7 @@ class OddAPI {
 
             CoroutineScope(Dispatchers.IO).launch {
                 val response = client.newCall(request).execute()
-                val odds = getFootballOdd(response.body?.string())
+                val odds = getOddFromJSONResponse(response.body?.string())
                 withContext(Dispatchers.Main) {
                     Log.d("odds", odds.toString())
                     uiVal.value = odds
@@ -52,7 +50,7 @@ class OddAPI {
 
         }
 
-        fun getFootballOdd(body: String?): Pair<String, String> {
+        fun getOddFromJSONResponse(body: String?): Pair<String, String> {
             if (body == null) {
                 return Pair("no info", "no info")
             }

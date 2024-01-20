@@ -220,7 +220,7 @@ fun searchEvent(title: String, events: MutableList<Events>?,filteredEvents: Muta
     when {
         title.startsWith("loc:") -> searchLoc(title.split("loc: ")[1],events,filteredEvents,currentSearch,onFinished)
         title.startsWith("club:") -> searchClub(title.split("club: ")[1],events,filteredEvents,currentSearch,onFinished)
-        title.startsWith("sport:") -> searchSport(title.split("sport: ")[1],events,filteredEvents,currentSearch,distance,userLoc,onFinished)
+        //title.startsWith("sport:") -> searchSport(title.split("sport: ")[1],events,filteredEvents,currentSearch,distance,userLoc,onFinished)
         else -> searchPlace(title.split(": ")[1],events,filteredEvents,currentSearch,onFinished)
     }
 }
@@ -254,7 +254,7 @@ fun searchClub(
     onFinished(false,LatLng(0.0,0.0))
 }
 
-fun searchSport(
+/*fun searchSport(
     sport: String,
     events: MutableList<Events>?,
     filteredEvents: MutableList<Events>?,
@@ -269,7 +269,7 @@ fun searchSport(
         if(event.eventType.toString() == sport && getDistanceBetweenTwoPoints(event.markerLocations.latLng,userLoc) <= dist) currentSearch?.add(event)//filteredEvents?.add(event)
     }
     onFinished(false,LatLng(0.0,0.0))
-}
+}*/
 
 fun searchPlace(
     place: String,
