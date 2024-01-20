@@ -219,6 +219,15 @@ class MarkerLocations(
                     "Lisboa",
                     getRandomPercentageOfNumber(1800.0), hashSetOf()//mutableListOf()
                 )
+
+                c.contains("sporting de espinho") -> return MarkerLocations(
+                    "Nave Polivalente de Espinho",
+                    LatLng(41.000111903081965, -8.622821677802849),
+                    Type.PAVILION,
+                    6000,
+                    "Espinho",
+                    getRandomPercentageOfNumber(6000.0), hashSetOf()
+                )
                 c.contains("sporting") -> return MarkerLocations(
                     "Pavilhão João Rocha",
                     LatLng(38.76348, -9.15846),
@@ -402,14 +411,6 @@ class MarkerLocations(
                     1800,
                     "Espinho",
                     getRandomPercentageOfNumber(1800.0), hashSetOf()
-                )
-                c.contains("sporting de espinho") -> return MarkerLocations(
-                    "Nave Polivalente de Espinho",
-                    LatLng(41.000111903081965, -8.622821677802849),
-                    Type.PAVILION,
-                    6000,
-                    "Espinho",
-                    getRandomPercentageOfNumber(6000.0), hashSetOf()
                 )
                 c.contains("gondomar") -> return MarkerLocations(
                     "Ala de Nun'Álvares de Gondomar",

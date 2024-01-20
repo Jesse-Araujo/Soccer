@@ -265,7 +265,7 @@ class Events(
             allEvents?.forEach { event ->
                 val id = "${event.id}+${event.eventType.type}"
                 if (ids.contains(id)) {
-                    if (event.eventType.type == "Football" && (/*event.homeTeam == "Vizela" ||*/ event.homeTeam == "Benfica")) {
+                    if (event.eventType.type == "Basketball" && (/*event.homeTeam == "Vizela" ||*/ event.homeTeam.contains("Sporting"))) {
                         Log.d("event", event.toString())
                         Log.d("event date", event.date.toString())
                         Log.d("time", time.toString())

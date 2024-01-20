@@ -146,7 +146,6 @@ fun MarkerReview(
     quality: MutableState<Int>,
     markerName: String
 ) {
-
     Box(
         modifier = Modifier
             .background(Color.LightGray)

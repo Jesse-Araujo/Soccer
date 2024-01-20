@@ -42,7 +42,7 @@ class VolleyballApi {
 
                     Events(
                         jsonObject.getInt("id"),
-                        EventType.BASKETBALL,
+                        EventType.VOLLEYBALL,
                         jsonObject.getJSONObject("league").getString("name"),
                         Events.convertTimestampToTime(
                             jsonObject.getLong("timestamp")
