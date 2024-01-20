@@ -15,7 +15,7 @@ class OddAPI {
 
     companion object {
 
-        fun getOdds(uiVal: MutableState<Pair<String, String>>, event: Events, apiUrl : String, season : String = "2023") {
+        fun getOdds(uiVal: MutableState<Pair<String, String>>, event: Events, apiUrl : String,fullUrl:String) {
 
             //TODO tirar isto
             Log.d("odds", "poupar api")
@@ -31,7 +31,7 @@ class OddAPI {
             val client = OkHttpClient()
 
             val request = Request.Builder()
-                .url("$apiUrl/odds?fixture=${event.id}&season=$season")
+                .url(fullUrl)
                 //.url("$apiUrl/odds?fixture=$eventId&bookmaker=$bookmaker&season=$season")
                 .header("x-rapidapi-host", apiUrl)
                 .header("x-rapidapi-key", apiKey)
@@ -40,6 +40,7 @@ class OddAPI {
             CoroutineScope(Dispatchers.IO).launch {
                 val response = client.newCall(request).execute()
                 val odds = getOddFromJSONResponse(response.body?.string())
+                Log.d("getting odds","${event.homeTeam} vs ${event.awayTeam}")
                 withContext(Dispatchers.Main) {
                     Log.d("odds", odds.toString())
                     uiVal.value = odds
@@ -63,23 +64,27 @@ class OddAPI {
             val values = bets.getJSONObject(0).getJSONArray("values")
             val homeOdd = values.getJSONObject(0).getString("odd")
             val awayOdd = values.getJSONObject(2).getString("odd")
+            Log.d("homeOdd",homeOdd)
+            Log.d("awayOdd",awayOdd)
             return Pair(homeOdd, awayOdd)
         }
     }
 }
 
 fun main() {
-    val eventId = 1063613
-    val apiUrl = "https://v3.football.api-sports.io"
-    val season = "2023"
+    val eventId = 357434
+    val apiUrl = "https://v1.basketball.api-sports.io"
+    val season = "2023-2024"
     val bookmaker = 6
 
     val apiKey = "d0e33784e246dddf42f91ba3633549b8"
 
     val client = OkHttpClient()
 
+    val l = "$apiUrl/odds?game=$eventId&season=$season&league=74"
+
     val request = Request.Builder()
-        .url("$apiUrl/odds?fixture=$eventId&season=$season")
+        .url(l)
         //.url("$apiUrl/odds?fixture=$eventId&bookmaker=$bookmaker&season=$season")
         .header("x-rapidapi-host", apiUrl)
         .header("x-rapidapi-key", apiKey)
@@ -87,7 +92,7 @@ fun main() {
     val response = client.newCall(request).execute()
     val xiu = response.body?.toString()?.split("league:")
     //xiu?.forEach { println(it) }
-    println(response.body?.toString())
+    println(response.body?.string())
 }
 
 /*1063602

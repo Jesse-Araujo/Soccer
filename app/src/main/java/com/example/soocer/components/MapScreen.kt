@@ -738,16 +738,17 @@ fun getPlaceImage(eventType: EventType): Int {
 
 fun getOddsForEvent(odds: MutableState<Pair<String, String>>, event: Events) {
     when(event.eventType){
-        EventType.FOOTBALL -> OddAPI.getOdds(odds, event, "https://v3.football.api-sports.io")
-        EventType.HANDBALL -> OddAPI.getOdds(odds, event, "https://v1.handball.api-sports.io")
+        EventType.FOOTBALL -> OddAPI.getOdds(odds, event,"https://v3.football.api-sports.io" ,"https://v3.football.api-sports.io/odds?fixture=${event.id}&season=2023")
+        EventType.HANDBALL -> OddAPI.getOdds(odds, event, "https://v1.handball.api-sports.io","https://v1.handball.api-sports.io/odds?game=${event.id}")
         EventType.BASKETBALL -> OddAPI.getOdds(
             odds,
             event,
             "https://v1.basketball.api-sports.io",
-            "2023-2024"
+            "https://v1.basketball.api-sports.io/odds?game=${event.id}&season=2023-2024&league=74"
         )
         EventType.FUTSAL -> TODO()
-        EventType.VOLLEYBALL -> OddAPI.getOdds(odds, event, "https://v1.volleyball.api-sports.io")
+        EventType.VOLLEYBALL -> OddAPI.getOdds(odds, event,"https://v1.volleyball.api-sports.io" ,
+            "https://v1.volleyball.api-sports.io/odds?game=${event.id}")
         else -> return
     }
 }
