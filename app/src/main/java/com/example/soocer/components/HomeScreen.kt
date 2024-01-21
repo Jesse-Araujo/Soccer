@@ -27,7 +27,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.soocer.R
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -36,6 +39,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import com.example.soocer.Screens
 import com.example.soocer.auxiliary.Global
 import com.example.soocer.auxiliary.clearFile
@@ -69,6 +73,7 @@ fun HomeScreen(
 }
 
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Home(
     favSports: MutableState<HashSet<String>>,
@@ -86,14 +91,34 @@ fun Home(
                 .align(Alignment.TopCenter)
                 .background(color)
         ) {
-            Text(
-                text = "Sports Events",
-                fontSize = 36.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(
-                    Alignment.Center
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Sports Events",
+                    fontSize = 36.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
                 )
-            )
+
+                Image(
+                    modifier = Modifier
+                        .size(52.dp)
+                        .combinedClickable(
+                            onClick = {
+                                Global.favSports.clear()
+                                Global.userId = ""
+                                clearFile(appContext)
+                                navController.navigate(Screens.SignIn.route)
+                            },
+                        ),
+                    painter = painterResource(id = R.drawable.logout_variant),
+                    contentDescription = "Logout",
+                )
+
+            }
+
         }
         Column(modifier = Modifier.padding(top = 100.dp)) {
             SportCard(
@@ -117,14 +142,7 @@ fun Home(
                 favSports = favSports,
                 navController = navController
             )
-            Button(onClick = {
-                Global.favSports.clear()
-                Global.userId = ""
-                clearFile(appContext)
-                navController.navigate(Screens.SignIn.route)
-            }) {
-                Text(text = "Log out")
-            }
+
             LocationServiceControls(appContext, startService)
         }
     }
@@ -165,7 +183,7 @@ fun SportImage(
             modifier = Modifier
                 .size(size.dp)
                 .combinedClickable(
-                    onClick = { onSportClick(sport,navController) },
+                    onClick = { onSportClick(sport, navController) },
                     onLongClick = {
                         Log.d("show", show.toString())
                         show = !show

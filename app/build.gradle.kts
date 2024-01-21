@@ -73,6 +73,8 @@ dependencies {
     implementation("com.google.firebase:firebase-database:20.3.0")
     implementation("com.google.android.gms:play-services-wallet:19.2.1")
     implementation("com.google.firebase:firebase-crashlytics-buildtools:2.9.9")
+    implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
+    implementation ("androidx.compose.material:material-icons-extended:1.3.1")
 
 
     testImplementation("junit:junit:4.13.2")
