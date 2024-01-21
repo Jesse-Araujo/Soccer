@@ -70,35 +70,3 @@ class OddAPI {
         }
     }
 }
-
-fun main() {
-    val eventId = 357434
-    val apiUrl = "https://v1.basketball.api-sports.io"
-    val season = "2023-2024"
-    val bookmaker = 6
-
-    val apiKey = "d0e33784e246dddf42f91ba3633549b8"
-
-    val client = OkHttpClient()
-
-    val l = "$apiUrl/odds?game=$eventId&season=$season&league=74"
-
-    val request = Request.Builder()
-        .url(l)
-        //.url("$apiUrl/odds?fixture=$eventId&bookmaker=$bookmaker&season=$season")
-        .header("x-rapidapi-host", apiUrl)
-        .header("x-rapidapi-key", apiKey)
-        .build()
-    val response = client.newCall(request).execute()
-    val xiu = response.body?.toString()?.split("league:")
-    //xiu?.forEach { println(it) }
-    println(response.body?.string())
-}
-
-/*1063602
-1063603
-1063604
-1063606
-1063607
-1063609
-1063610*/

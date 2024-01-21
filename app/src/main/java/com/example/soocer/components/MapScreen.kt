@@ -103,11 +103,12 @@ fun MapScreen(
     var handballLoading by remember { mutableStateOf(true) }
     var basketballLoading by remember { mutableStateOf(true) }
     var volleyballLoading by remember { mutableStateOf(true) }
+    var futsalLoading by remember { mutableStateOf(true) }
     val allEvents by remember { mutableStateOf<MutableList<Events>?>(mutableListOf()) }
     val filteredEvents by remember { mutableStateOf<MutableList<Events>?>(mutableListOf()) }
     var everythingLoaded by remember { mutableStateOf(false) }
     everythingLoaded =
-        !footballLoading && !handballLoading && !basketballLoading && !volleyballLoading
+        !footballLoading && !handballLoading && !basketballLoading && !volleyballLoading && !futsalLoading
     var currentLocation by remember { mutableStateOf<Location?>(null) }
     val gpsIsOnline = remember { mutableStateOf(false) }
     val filterDistance = remember { mutableStateOf("max") }
@@ -146,6 +147,7 @@ fun MapScreen(
                     handballLoading = false
                     basketballLoading = false
                     volleyballLoading = false
+                    futsalLoading = false
                 } else {
                     Log.d("vou ler da API", "")
                     CoroutineScope(Dispatchers.IO).launch {
@@ -171,6 +173,18 @@ fun MapScreen(
                             Log.d("tenho a info de handball", Events.events.toString())
                             log(result)
                             handballLoading = false
+                        }
+                    }
+                    CoroutineScope(Dispatchers.IO).launch {
+                        Events.getFutsalEvents { result ->
+                            if (!result.isNullOrEmpty()) {
+                                Events.events.addAll(result)
+                                allEvents?.addAll(result)
+                                filteredEvents?.addAll(result)
+                            }
+                            Log.d("tenho a info de futsal", Events.events.toString())
+                            log(result)
+                            futsalLoading = false
                         }
                     }
                     CoroutineScope(Dispatchers.IO).launch {
@@ -218,6 +232,7 @@ fun MapScreen(
         handballLoading = false
         basketballLoading = false
         volleyballLoading = false
+        futsalLoading = false
 
     }
 
@@ -314,7 +329,7 @@ fun MapScreen(
                 state = MarkerState(position = LatLng(lat, long)),
                 title = "You are here",
             )
-            if (!footballLoading && !handballLoading && !basketballLoading && !volleyballLoading) {
+            if (!footballLoading && !handballLoading && !basketballLoading && !volleyballLoading && !futsalLoading) {
                 markers.clear()
                 existingMarkers.clear()
                 Log.d("filtered events mapa", filteredEvents?.size.toString())

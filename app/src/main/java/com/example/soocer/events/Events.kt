@@ -81,6 +81,18 @@ class Events(
             }
         }
 
+        fun getFutsalEvents(onFinished: (List<Events>?) -> Unit) {
+            CoroutineScope(Dispatchers.IO).launch {
+                val events = FutsalApi.getFutsalEvents()
+                if (events != null) {
+                    withContext(Dispatchers.Main) {
+                        onFinished(events)
+                    }
+                }
+            }
+        }
+
+
         fun getBasketballEvents(onFinished: (List<Events>?) -> Unit) {
             CoroutineScope(Dispatchers.IO).launch {
                 val events = BasketballApi.getBasketballEvents()
