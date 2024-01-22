@@ -7,6 +7,7 @@ import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -207,7 +209,10 @@ fun WindowMarkerDetails(
                     shape = RoundedCornerShape(35.dp, 35.dp, 35.dp, 35.dp)
                 )
                 .align(Alignment.TopCenter)
-                .clickable { Log.d("click na box", "") },//to stop window from disappear on map drag
+                .clickable(
+                    interactionSource = MutableInteractionSource(),
+                    indication = null
+                ) { Log.d("click na box", "") },//to stop window from disappear on map drag
         ) {
             Column(
                 Modifier
@@ -219,16 +224,29 @@ fun WindowMarkerDetails(
                         .size(10.dp)
                 )
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 10.dp, top = 10.dp, end = 10.dp),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    AsyncImage(model = event.homeTeamLogo, contentDescription = "home_logo", modifier = Modifier.size(50.dp))
+                    AsyncImage(
+                        model = event.homeTeamLogo,
+                        contentDescription = "home_logo",
+                        modifier = Modifier.size(50.dp)
+                    )
+                    val textSize = getTextSize("${event.homeTeam} vs ${event.awayTeam}".length)
                     Text(
                         text = "${event.homeTeam} vs ${event.awayTeam}",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = textSize.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(start = 5.dp, top = 10.dp, end = 5.dp)
                     )
-                    AsyncImage(model = event.awayTeamLogo, contentDescription = "away_logo", modifier = Modifier.size(50.dp))
+                    AsyncImage(
+                        model = event.awayTeamLogo,
+                        contentDescription = "away_logo",
+                        modifier = Modifier.size(50.dp)
+                    )
                 }
                 Spacer(
                     modifier = Modifier
@@ -311,9 +329,12 @@ fun WindowMarkerDetails(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable {
-                            openBetclicApp(context)
-                        }, horizontalArrangement = Arrangement.Center
+                        .height(50.dp)
+                    /*.clickable {
+                        openBetclicApp(context)
+                    }*/,
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     val odds = remember { mutableStateOf(Pair("0", "0")) }
                     if (event.homeOdd != "" && event.awayOdd != "") {
@@ -326,18 +347,30 @@ fun WindowMarkerDetails(
                     Image(
                         painter = painterResource(id = R.drawable.bet),
                         contentDescription = "odds",
-                        modifier = Modifier.size(39.dp)
+                        modifier = Modifier
+                            .size(50.dp)
+                            .padding(top = 10.dp)
+                            .clickable(
+                                interactionSource = MutableInteractionSource(),
+                                indication = null
+                            ) {
+                                openBetclicApp(context)
+                            },//tava size 39.dp na img
+                        alignment = Alignment.Center,
                     )
                     Spacer(Modifier.size(10.dp))
+                    val size =
+                        getTextSize("${event.homeTeam} ${odds.value.first} - ${odds.value.second} ${event.awayTeam}".length)
                     Text(
                         text = "${event.homeTeam} ${odds.value.first} - ${odds.value.second} ${event.awayTeam}",
-                        Modifier.padding(top = 5.dp)
+                        fontSize = size.sp,
+                        modifier = Modifier//.padding(top = 5.dp)
                     )
                 }
                 UpvoteOption(eventID = event.id.toString())
                 TicketBuyOption(context, event)
-                ShareEventOption(context, event)
-                showReviewsOfMarker(event, navController)
+                ShareOrRateOption(context, event, navController)
+                //showReviewsOfMarker(event, navController)
                 if (showBackButton) {
                     Row(horizontalArrangement = Arrangement.Center) {
                         Spacer(modifier = Modifier.weight(.4f)) // This creates a flexible space to push the button to the center
@@ -352,9 +385,14 @@ fun WindowMarkerDetails(
 
 @Composable
 fun showReviewsOfMarker(event: Events, navController: NavController) {
-    Button(onClick = { navController.navigate(Screens.Review.route.replace(
-        oldValue = "{markerName}",
-        newValue = event.markerLocations.title)) }) {
+    Button(onClick = {
+        navController.navigate(
+            Screens.Review.route.replace(
+                oldValue = "{markerName}",
+                newValue = event.markerLocations.title
+            )
+        )
+    }) {
         Text(text = "Review ${event.markerLocations.type}")
     }
 }
@@ -364,22 +402,31 @@ fun UpvoteOption(eventID: String) {
     var image by remember {
         mutableStateOf(if (Global.upvotes.contains(eventID)) R.drawable.ic_upvoted else R.drawable.ic_upvote)
     }
+    val size = 50
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(25.dp),
+            .height(size.dp),
         horizontalArrangement = Arrangement.Center
     ) {
-        Text(text = "Is this a big game?", fontWeight = FontWeight.Bold)
+        Text(
+            text = "Is this a big game?",
+            fontWeight = FontWeight.Bold,
+            fontSize = 19.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = 10.dp)
+        )
         Spacer(Modifier.size(10.dp))
         Image(
-            modifier = Modifier.clickable {
-                image =
-                    if (image == R.drawable.ic_upvoted) R.drawable.ic_upvote else R.drawable.ic_upvoted
-                upvoteClick(eventID)
-            },
+            modifier = Modifier
+                .size(size.dp)
+                .clickable(interactionSource = MutableInteractionSource(), indication = null) {
+                    image =
+                        if (image == R.drawable.ic_upvoted) R.drawable.ic_upvote else R.drawable.ic_upvoted
+                    upvoteClick(eventID)
+                },
             painter = painterResource(id = image),
-            contentDescription = "buy_ticket_img"
+            contentDescription = "buy_ticket_img",
         )
     }
 }
@@ -394,28 +441,44 @@ fun upvoteClick(eventID: String) {
 
 @Composable
 fun TicketBuyOption(appContext: Context, event: Events) {
+    val date = event.date.toString().split("T")[0]
     val linkUrl =
-        "https://www.google.com/search?&q=comprar+bilhetes+${event.homeTeam}+${event.awayTeam}"
+        "https://www.google.com/search?&q=comprar+bilhetes+${event.homeTeam}+${event.awayTeam}+$date"
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { openLink(appContext, linkUrl) }, horizontalArrangement = Arrangement.Center
+            .size(50.dp)
+            .clickable(
+                interactionSource = MutableInteractionSource(),
+                indication = null
+            ) { openLink(appContext, linkUrl) }, horizontalArrangement = Arrangement.Center
     ) {
-        Text(text = "Buy Tickets", fontWeight = FontWeight.Bold, color = Color.Blue)
+        Text(
+            text = "Buy Tickets",
+            fontWeight = FontWeight.Bold,
+            color = Color.Blue,
+            modifier = Modifier.padding(top = 5.dp)
+        )
         Spacer(Modifier.size(10.dp))
         Image(
             painter = painterResource(id = R.drawable.ic_link),
-            contentDescription = "buy_ticket_img"
+            contentDescription = "buy_ticket_img",
+            modifier = Modifier.size(35.dp)
         )
     }
 }
 
 @Composable
-fun ShareEventOption(appContext: Context, event: Events) {
+fun ShareOrRateOption(appContext: Context, event: Events, navController: NavController) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable {
+            .height(50.dp), horizontalArrangement = Arrangement.Center,
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.ic_share),
+            contentDescription = "share_img",
+            modifier = Modifier.size(35.dp).clickable {
                 val date = event.date
                     .toString()
                     .replace("T", " ") + "h"
@@ -425,9 +488,16 @@ fun ShareEventOption(appContext: Context, event: Events) {
                     text = "${event.homeTeam} vs ${event.awayTeam} on $date",
                     latLng = event.markerLocations.latLng
                 )
-            }, horizontalArrangement = Arrangement.Center
-    ) {
-        Image(painter = painterResource(id = R.drawable.ic_share), contentDescription = "share_img")
+            })
+        Spacer(modifier = Modifier.size(35.dp))
+        Image(painter = painterResource(id = R.drawable.rating), contentDescription = "rate_button", modifier = Modifier.size(35.dp).clickable {
+            navController.navigate(
+                Screens.Review.route.replace(
+                    oldValue = "{markerName}",
+                    newValue = event.markerLocations.title
+                )
+            )
+        })
     }
 }
 
@@ -450,3 +520,5 @@ fun shareContent(context: Context, subject: String, text: String, latLng: LatLng
     chooserIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
     context.startActivity(chooserIntent)
 }
+
+fun getTextSize(size: Int, maxSize: Int = 25): Int = if (size > maxSize) 14 else 18

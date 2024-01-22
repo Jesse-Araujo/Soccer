@@ -210,9 +210,8 @@ class Events(
             ) {
                 team1BigTeam = true
             }
-            if (at.contains("benfica") || at.contains("sporting") || at.contains("porto") || at.contains(
-                    "braga"
-                ) || at.contains("guima")
+            if (at.contains("benfica") || at.contains("sporting") || at.contains("porto") ||
+                at.contains("braga") || at.contains("guima") || at.contains("vitoria sc")
             ) {
                 team2BigTeam = true
             }
@@ -277,7 +276,10 @@ class Events(
             allEvents?.forEach { event ->
                 val id = "${event.id}+${event.eventType.type}"
                 if (ids.contains(id)) {
-                    if (event.eventType.type == "Basketball" && (/*event.homeTeam == "Vizela" ||*/ event.homeTeam.contains("Sporting"))) {
+                    if (event.eventType.type == "Basketball" && (/*event.homeTeam == "Vizela" ||*/ event.homeTeam.contains(
+                            "Sporting"
+                        ))
+                    ) {
                         Log.d("event", event.toString())
                         Log.d("event date", event.date.toString())
                         Log.d("time", time.toString())
@@ -299,8 +301,9 @@ class Events(
                     if (event.date.toLocalDate()
                             .isEqual(today.toLocalDate()) || (event.date.toLocalDate()
                             .isAfter(today.toLocalDate()) && (event.date.toLocalDate().isBefore(
-                            maxTime.toLocalDate()) || event.date.toLocalDate().isEqual(maxTime.toLocalDate())
-                        ))
+                            maxTime.toLocalDate()
+                        ) || event.date.toLocalDate().isEqual(maxTime.toLocalDate())
+                                ))
                     ) {
                         if (getDistanceBetweenTwoPoints(
                                 event.markerLocations.latLng,

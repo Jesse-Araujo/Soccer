@@ -28,7 +28,6 @@ import androidx.navigation.NavController
 import com.example.soocer.R
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
@@ -92,19 +91,20 @@ fun Home(
                 .background(color)
         ) {
             Row(
-                Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     text = "Sports Events",
                     fontSize = 36.sp,
                     fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.weight(1f)
                 )
 
                 Image(
                     modifier = Modifier
-                        .size(52.dp)
+                        .size(52.dp).weight(0.2f)
                         .combinedClickable(
                             onClick = {
                                 Global.favSports.clear()
@@ -116,7 +116,6 @@ fun Home(
                     painter = painterResource(id = R.drawable.logout_variant),
                     contentDescription = "Logout",
                 )
-
             }
 
         }
