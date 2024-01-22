@@ -22,6 +22,11 @@ sealed interface SignUiState {
 class SignViewModel : ViewModel() {
     var signsUiState: SignUiState by mutableStateOf(SignUiState.Loading)
         private set
+    var error: Boolean by mutableStateOf(false)
+        private set
+
+    var errorMessage: String by mutableStateOf("")
+        private set
 
     fun login(context:Context,email: String, password: String,onFinished:() -> Unit){
         FirebaseAuth
@@ -31,7 +36,8 @@ class SignViewModel : ViewModel() {
                 Log.d("LOGIN","Inside_login_failure")
                 it.localizedMessage?.let { it1 -> Log.d("LOGIN", it1) }
 
-                SignUiState.Error
+                error = true
+                errorMessage = "something went wrong"
             }
             .addOnCompleteListener {
                 Log.d("LOGIN","Inside_login_complete")
@@ -39,8 +45,13 @@ class SignViewModel : ViewModel() {
 
 
                 if(it.isSuccessful){
+                    error = false
+                    errorMessage = ""
                     SignUiState.Success
-                } else SignUiState.Error
+                } else{
+                    error = true
+                    errorMessage = "Invalid credentials"
+                }
             }.addOnSuccessListener {
                 Log.d("LOGIN","${it.user?.uid}")
                 Log.d("cred",it.credential.toString())
@@ -58,11 +69,14 @@ class SignViewModel : ViewModel() {
             .addOnCompleteListener {
             Log.d("REGISTER","Email $email registered complete")
             Log.d("REGISTER","${it.isSuccessful}")
-
+            error = false
+            errorMessage = ""
         }.addOnFailureListener {
             Log.d("REGISTER","Email $email registered failed")
             it.localizedMessage?.let { it1 -> Log.d("REGISTER", it1) }
             SignUiState.Error
+            error = true
+            errorMessage = "something went wrong"
         }.addOnSuccessListener {
                 Log.d("REGISTER","${it.user?.uid}")
                 Global.userId = it.user?.uid.toString()

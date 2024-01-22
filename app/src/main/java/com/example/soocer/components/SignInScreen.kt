@@ -70,9 +70,8 @@ fun SignInScreen(
     var password by remember { mutableStateOf("qwerty") }
     val signViewModel: SignViewModel = viewModel()
         var loading by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf(false) }
 
-    var showPassword by remember { mutableStateOf(value = false) }
+    var showPassword: Boolean by remember { mutableStateOf(value = false) }
 
     Surface(
         modifier = Modifier
@@ -91,9 +90,11 @@ fun SignInScreen(
             if(loading) {
                 Image(painter = painterResource(id = R.drawable.loading), contentDescription = "loadingSignIn", modifier = Modifier.size(50.dp))
             }
-            if(error) {
-                Text(text = "Credências Inválidas",
+            if(signViewModel.error) {
+                loading = false
+                Text(text = signViewModel.errorMessage,
                     color = Color.Red)
+
             }
             OutlinedTextField(
                 value = email,
@@ -158,7 +159,6 @@ fun SignInScreen(
                     //navController.navigate(Screens.Home.route)
                 },
                 contentPadding = PaddingValues(),
-                colors = ButtonDefaults.buttonColors(Color.Green),
                 shape = RoundedCornerShape(7.dp)
             ) {
                 Text(

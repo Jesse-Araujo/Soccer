@@ -225,7 +225,7 @@ fun WindowMarkerDetails(
                     AsyncImage(model = event.homeTeamLogo, contentDescription = "home_logo", modifier = Modifier.size(50.dp))
                     Text(
                         text = "${event.homeTeam} vs ${event.awayTeam}",
-                        fontSize = 16.sp,
+                        fontSize = 13.sp,
                         fontWeight = FontWeight.Bold
                     )
                     AsyncImage(model = event.awayTeamLogo, contentDescription = "away_logo", modifier = Modifier.size(50.dp))
@@ -352,10 +352,16 @@ fun WindowMarkerDetails(
 
 @Composable
 fun showReviewsOfMarker(event: Events, navController: NavController) {
-    Button(onClick = { navController.navigate(Screens.Review.route.replace(
-        oldValue = "{markerName}",
-        newValue = event.markerLocations.title)) }) {
-        Text(text = "Review ${event.markerLocations.type}")
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center
+    ){
+        Button(
+            onClick = { navController.navigate(Screens.Review.route.replace(
+            oldValue = "{markerName}",
+            newValue = event.markerLocations.title)) }) {
+            Text(text = "Review ${event.markerLocations.type}")
+        }
     }
 }
 
@@ -427,6 +433,7 @@ fun ShareEventOption(appContext: Context, event: Events) {
                 )
             }, horizontalArrangement = Arrangement.Center
     ) {
+        Text(text = "Share Event", fontWeight = FontWeight.Bold)
         Image(painter = painterResource(id = R.drawable.ic_share), contentDescription = "share_img")
     }
 }
