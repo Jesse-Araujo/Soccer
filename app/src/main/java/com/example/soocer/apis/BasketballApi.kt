@@ -1,6 +1,8 @@
-package com.example.soocer.events
+package com.example.soocer.apis
 
 import android.os.Build
+import com.example.soocer.data.EventType
+import com.example.soocer.data.Events
 import com.example.soocer.data.MarkerLocations
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -48,7 +50,7 @@ class BasketballApi {
                         Events.convertTimestampToTime(
                             jsonObject.getLong("timestamp")
                         ),
-                        "",
+                        "season",
                         jsonObject.getJSONObject("league").getString("logo"),
                         jsonObject.getJSONObject("teams").getJSONObject("home").getString("name"),
                         jsonObject.getJSONObject("teams").getJSONObject("home").getString("logo"),

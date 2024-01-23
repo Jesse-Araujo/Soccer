@@ -148,7 +148,9 @@ fun SignInScreen(
                         CoroutineScope(Dispatchers.Main).launch {
                             //withContext(Dispatchers.Main) {
                             loading = false
-                            navController.navigate(Screens.Home.route)
+                            navController.navigate(Screens.Home.route) {
+                                popUpTo(0)
+                            }
                            // }
                         }
                     }
@@ -177,7 +179,9 @@ fun SignInScreen(
                     loading = true
                     if(email.isNotEmpty() && password.isNotEmpty()) signViewModel.register(email, password){
                         loading = false
-                        navController.navigate(Screens.Home.route)
+                        navController.navigate(Screens.Home.route) {
+                            popUpTo(0)
+                        }
                     }
                     email = ""
                     password = ""

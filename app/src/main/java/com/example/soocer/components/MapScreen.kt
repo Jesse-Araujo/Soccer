@@ -1,14 +1,10 @@
 package com.example.soocer.components
 
 import android.annotation.SuppressLint
-import android.content.ActivityNotFoundException
 import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager.NameNotFoundException
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.location.Location
-import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -55,9 +51,9 @@ import com.example.soocer.R
 import com.example.soocer.auxiliary.Global
 import com.example.soocer.data.FirebaseFunctions
 import com.example.soocer.data.MarkerLocations
-import com.example.soocer.events.EventType
-import com.example.soocer.events.Events
-import com.example.soocer.events.OddAPI
+import com.example.soocer.data.EventType
+import com.example.soocer.data.Events
+import com.example.soocer.apis.OddAPI
 import com.example.soocer.location.DefaultLocationClient
 import com.example.soocer.location.GPSChecker
 import com.example.soocer.weather.WeatherType
@@ -708,30 +704,6 @@ fun changeDistanceFilter(
         "5km" -> filterDistance.value = "15km"
         "15km" -> filterDistance.value = "max"
         "max" -> filterDistance.value = "0.5km"
-        /*"0.5km" -> {
-            Events.getEventsInDistance(events, filteredEvents, 1f, userLoc, onFinished)
-            filterDistance.value = "1km"
-        }
-
-        "1km" -> {
-            Events.getEventsInDistance(events, filteredEvents, 5f, userLoc, onFinished)
-            filterDistance.value = "5km"
-        }
-
-        "5km" -> {
-            Events.getEventsInDistance(events, filteredEvents, 15f, userLoc, onFinished)
-            filterDistance.value = "15km"
-        }
-
-        "15km" -> {
-            Events.getEventsInDistance(events, filteredEvents, 0f, userLoc, onFinished)
-            filterDistance.value = "max"
-        }
-
-        "max" -> {
-            Events.getEventsInDistance(events, filteredEvents, 0.5f, userLoc, onFinished)
-            filterDistance.value = "0.5km"
-        }*/
     }
 }
 
@@ -795,24 +767,5 @@ fun bitmapDescriptorFromVector(
     drawable.draw(canvas)
 
     return BitmapDescriptorFactory.fromBitmap(bm)
-}
-
-fun openBetclicApp(context: Context) {
-    val packageName = "sport.android.betclic.pt"
-
-    Intent(Intent.ACTION_MAIN).also {
-        it.`package` = packageName
-        it.addCategory(Intent.CATEGORY_LAUNCHER)
-        try {
-            it.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            context.startActivity(it)
-        } catch (e: ActivityNotFoundException) {
-            val playStoreIntent = Intent(Intent.ACTION_VIEW).apply {
-                data = Uri.parse("market://details?id=$packageName")
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            }
-            context.startActivity(playStoreIntent)
-        }
-    }
 }
 

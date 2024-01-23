@@ -1,7 +1,8 @@
-package com.example.soocer.events
+package com.example.soocer.apis
 
 import android.util.Log
 import androidx.compose.runtime.MutableState
+import com.example.soocer.data.Events
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -15,7 +16,7 @@ class OddAPI {
 
     companion object {
 
-        fun getOdds(uiVal: MutableState<Pair<String, String>>, event: Events, apiUrl : String,fullUrl:String) {
+        fun getOdds(uiVal: MutableState<Pair<String, String>>, event: Events, apiUrl : String, fullUrl:String) {
 
             //TODO tirar isto
             Log.d("odds", "poupar api")

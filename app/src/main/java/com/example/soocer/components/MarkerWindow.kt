@@ -1,5 +1,6 @@
 package com.example.soocer.components
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -49,7 +50,7 @@ import com.example.soocer.auxiliary.Global
 import com.example.soocer.data.FirebaseFunctions
 import com.example.soocer.data.MarkerLocations
 import com.example.soocer.data.Type
-import com.example.soocer.events.Events
+import com.example.soocer.data.Events
 import com.example.soocer.weather.Weather
 import com.example.soocer.weather.WeatherType
 import com.google.android.gms.maps.model.CameraPosition
@@ -73,10 +74,16 @@ fun CustomMarker(
     navController: NavController
 ) {
     var thereIsBigGame = false
+    var cupGame = false
     marker.events.forEach {
+        //Log.d("event","${it.homeTeam} vs ${it.awayTeam}")
+        //Log.d("city", it.city)
+        //Log.d("cup",it.isCupGame().toString())
         if (it.importantGame) thereIsBigGame = true
+        if(it.isCupGame()) cupGame = true
     }
     val iconResourceId = when {
+        marker.type == Type.STADIUM && cupGame -> R.drawable.stadium_allianz_cup
         marker.type == Type.STADIUM && thereIsBigGame -> R.drawable.stadium_big_game
         marker.type == Type.PAVILION && thereIsBigGame -> R.drawable.pavilion_big_game
         marker.type == Type.STADIUM -> R.drawable.stadium
@@ -84,6 +91,7 @@ fun CustomMarker(
     }
     var size = Pair(100, 75)
     if (thereIsBigGame) size = Pair(280, 200)
+    if (cupGame) size = Pair(210, 200)
     val icon = bitmapDescriptorFromVector(
         context, iconResourceId, size.first, size.second
     )
@@ -112,6 +120,8 @@ fun ShowEventList(
     val showOneEvent = remember() { mutableStateOf(false) }
     val selectedEvent = remember { mutableStateOf<Events?>(null) }
     eventsForMarkerWindow.value.sortBy { it.date }
+    var cupGame = false
+    eventsForMarkerWindow.value.forEach { if(it.isCupGame()) cupGame = true }
     if (!showOneEvent.value) {
         Box(modifier = Modifier.fillMaxSize()) {
             Box(
@@ -127,10 +137,12 @@ fun ShowEventList(
             ) {
                 Row {
                     Spacer(modifier = Modifier.weight(.4f))
-                    Text(
-                        text = eventsForMarkerWindow.value[0].homeTeam,
-                        fontWeight = FontWeight.Bold
-                    )
+                    if(!cupGame) {
+                        Text(
+                            text = eventsForMarkerWindow.value[0].homeTeam,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                     Spacer(modifier = Modifier.weight(.4f))
                 }
                 LazyColumn(
@@ -166,6 +178,7 @@ fun EventListItem(
 ) {
     var color = Color.White
     if (event.importantGame) color = Color.Red
+    val cupGame = event.isCupGame()
     Row(
         Modifier
             .fillMaxWidth()
@@ -181,7 +194,11 @@ fun EventListItem(
             modifier = Modifier.size(39.dp)
         )
         Spacer(Modifier.size(10.dp))
-        Text(text = "vs ${event.awayTeam}", fontWeight = FontWeight.Bold)
+        val textToShow = if(!cupGame) "vs ${event.awayTeam}" else {
+            "${event.homeTeam} vs ${event.awayTeam}"
+        }
+        val size = if (textToShow.length < 35) 14 else 10
+        Text(text = textToShow, fontWeight = FontWeight.Bold, fontSize = size.sp)
         Spacer(Modifier.size(10.dp))
         var d = event.date.toString().replace("T", " ")
         d = d.split(" ")[0]
@@ -519,6 +536,24 @@ fun shareContent(context: Context, subject: String, text: String, latLng: LatLng
     val chooserIntent = Intent.createChooser(intent, "Share via")
     chooserIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
     context.startActivity(chooserIntent)
+}
+
+fun openBetclicApp(context: Context) {
+    val packageName = "sport.android.betclic.pt"
+    Intent(Intent.ACTION_MAIN).also {
+        it.`package` = packageName
+        it.addCategory(Intent.CATEGORY_LAUNCHER)
+        try {
+            it.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            context.startActivity(it)
+        } catch (e: ActivityNotFoundException) {
+            val playStoreIntent = Intent(Intent.ACTION_VIEW).apply {
+                data = Uri.parse("market://details?id=$packageName")
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            context.startActivity(playStoreIntent)
+        }
+    }
 }
 
 fun getTextSize(size: Int, maxSize: Int = 25): Int = if (size > maxSize) 14 else 18

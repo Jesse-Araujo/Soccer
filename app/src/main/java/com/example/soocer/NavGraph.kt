@@ -33,8 +33,6 @@ fun NavGraph(
                 startService
             )
         }
-        composable(route = Screens.Register.route) {
-        }
         composable(route = Screens.Home.route) {
             HomeScreen(
                 navController = navController,

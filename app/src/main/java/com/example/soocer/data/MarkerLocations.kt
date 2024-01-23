@@ -1,6 +1,5 @@
 package com.example.soocer.data
 
-import com.example.soocer.events.Events
 import com.google.android.gms.maps.model.LatLng
 import kotlin.random.Random
 
@@ -16,7 +15,7 @@ class MarkerLocations(
     val capacity: Int,
     val city: String,
     val expectedCapacity: Int,
-    val events : HashSet<Events>
+    val events: HashSet<Events>
     //val events : MutableList<Events>
 ) {
 
@@ -208,8 +207,9 @@ class MarkerLocations(
             }
         }
 
-        fun getClubPavilion(club: String,changeGuimaraesName : Boolean = false): MarkerLocations {
-            val c = if (changeGuimaraesName && club.lowercase() == "vitoria") "vitoria sc" else club.lowercase()
+        fun getClubPavilion(club: String, changeGuimaraesName: Boolean = false): MarkerLocations {
+            val c =
+                if (changeGuimaraesName && club.lowercase() == "vitoria") "vitoria sc" else club.lowercase()
             when {
                 c.contains("benfica") -> return MarkerLocations(
                     "Pavilhão nº2 da Luz",
@@ -228,6 +228,7 @@ class MarkerLocations(
                     "Espinho",
                     getRandomPercentageOfNumber(6000.0), hashSetOf()
                 )
+
                 c.contains("sporting") -> return MarkerLocations(
                     "Pavilhão João Rocha",
                     LatLng(38.76348, -9.15846),
@@ -236,6 +237,7 @@ class MarkerLocations(
                     "Lisboa",
                     getRandomPercentageOfNumber(3000.0), hashSetOf()//mutableListOf()
                 )
+
                 c.contains("porto") -> return MarkerLocations(
                     "Dragão Arena",
                     LatLng(41.16262562453169, -8.581726406850882),
@@ -244,6 +246,7 @@ class MarkerLocations(
                     "Porto",
                     getRandomPercentageOfNumber(2200.0), hashSetOf()//mutableListOf()
                 )
+
                 c.contains("abc") -> return MarkerLocations(
                     "Pavilhão Flávio Sá Leite",
                     LatLng(41.53991280563391, -8.419730719663232),
@@ -252,6 +255,7 @@ class MarkerLocations(
                     "Braga",
                     getRandomPercentageOfNumber(5000.0), hashSetOf()//mutableListOf()
                 )
+
                 c.contains("aguas santas") -> return MarkerLocations(
                     "Pavilhão do Águas Santas",
                     LatLng(41.20599393333701, -8.565669191726352),
@@ -260,6 +264,7 @@ class MarkerLocations(
                     "Porto",
                     getRandomPercentageOfNumber(1000.0), hashSetOf()//mutableListOf()
                 )
+
                 c.contains("madeira") -> return MarkerLocations(
                     "Pavilhão do CS Marítimo",
                     LatLng(32.671795014929955, -16.935586840635324),
@@ -268,6 +273,7 @@ class MarkerLocations(
                     "Funchal",
                     getRandomPercentageOfNumber(1000.0), hashSetOf()//mutableListOf()
                 )
+
                 c == "vitoria" -> return MarkerLocations(
                     "Pavilhão Antoine Velge",
                     LatLng(38.53144722350263, -8.889980869201684),
@@ -276,6 +282,7 @@ class MarkerLocations(
                     "Setúbal",
                     getRandomPercentageOfNumber(1200.0), hashSetOf()//mutableListOf()
                 )
+
                 c == "vitoria sc" -> return MarkerLocations(
                     "Pavilhão Vitória SC",
                     LatLng(41.44809066106037, -8.280449839504874),
@@ -284,6 +291,7 @@ class MarkerLocations(
                     "Guimarães",
                     getRandomPercentageOfNumber(2500.0), hashSetOf()//mutableListOf()
                 )
+
                 c.contains("belenenses") -> return MarkerLocations(
                     "Pavilhão Acácio Rosa",
                     LatLng(38.70150037024289, -9.210051323381323),
@@ -292,6 +300,7 @@ class MarkerLocations(
                     "Lisboa",
                     getRandomPercentageOfNumber(1700.0), hashSetOf()//mutableListOf()
                 )
+
                 c.contains("povoa") -> return MarkerLocations(
                     "Pavilhão Desportivo Municipal da Póvoa de Varzim",
                     LatLng(41.389852590723194, -8.761240394769919),
@@ -300,6 +309,7 @@ class MarkerLocations(
                     "Póvoa de Varzim",
                     getRandomPercentageOfNumber(2500.0), hashSetOf()//mutableListOf()
                 )
+
                 c.contains("avanca") -> return MarkerLocations(
                     "Pavilhão Municipal Comendador Adelino Dias Costa",
                     LatLng(40.80961425158267, -8.576722114560576),
@@ -308,6 +318,7 @@ class MarkerLocations(
                     "Avanca",
                     getRandomPercentageOfNumber(5000.0), hashSetOf()
                 )
+
                 c.contains("ovarense") -> return MarkerLocations(
                     "Arena de Ovar",
                     LatLng(40.876095413474026, -8.633245443221147),
@@ -316,6 +327,7 @@ class MarkerLocations(
                     "Ovar",
                     getRandomPercentageOfNumber(2500.0), hashSetOf()
                 )
+
                 c.contains("oliveirense") -> return MarkerLocations(
                     "Pavilhão Dr. Salvador Machado",
                     LatLng(40.831021845012316, -8.485263632272332),
@@ -324,6 +336,7 @@ class MarkerLocations(
                     "Oliveira de Azeméis",
                     getRandomPercentageOfNumber(2300.0), hashSetOf()
                 )
+
                 c.contains("cd povoa") -> return MarkerLocations(
                     "Pavilhão Linhares de Castro",
                     LatLng(41.386976495995135, -8.772490514686178),
@@ -332,6 +345,7 @@ class MarkerLocations(
                     "Póvoa do Varzim",
                     getRandomPercentageOfNumber(600.0), hashSetOf()
                 )
+
                 c.contains("portimonense") -> return MarkerLocations(
                     "Pavilhão Desportivo do Boavista",
                     LatLng(37.14525666718976, -8.547763694780588),
@@ -340,6 +354,7 @@ class MarkerLocations(
                     "Portimão",
                     getRandomPercentageOfNumber(480.0), hashSetOf()
                 )
+
                 c.contains("imortal") -> return MarkerLocations(
                     "Pavilhão Francisco Neves",
                     LatLng(37.08670221554303, -8.25702053148043),
@@ -348,6 +363,7 @@ class MarkerLocations(
                     "Albufeira",
                     getRandomPercentageOfNumber(1000.0), hashSetOf()
                 )
+
                 c.contains("galomar") -> return MarkerLocations(
                     "Pavilhão do Caniço",
                     LatLng(32.650360350845155, -16.847393402683814),
@@ -356,6 +372,7 @@ class MarkerLocations(
                     "Funchal",
                     getRandomPercentageOfNumber(600.0), hashSetOf()
                 )
+
                 c.contains("esgueira") -> return MarkerLocations(
                     "Pavilhão Gimnodesportivo de Esgueira",
                     LatLng(40.65052790249701, -8.629054017085053),
@@ -364,6 +381,7 @@ class MarkerLocations(
                     "Aveiro",
                     getRandomPercentageOfNumber(2500.0), hashSetOf()
                 )
+
                 c.contains("lusitania") -> return MarkerLocations(
                     "Pavilhão Municipal de Angra do Heroísmo",
                     LatLng(38.65455665384727, -27.22415471361328),
@@ -372,6 +390,7 @@ class MarkerLocations(
                     "Angra do Heroísmo",
                     getRandomPercentageOfNumber(1326.0), hashSetOf()
                 )
+
                 c.contains("leixoes") -> return MarkerLocations(
                     "Centro de Desportos e Congressos de Matosinhos",
                     LatLng(41.18514081722406, -8.6679107653919),
@@ -380,6 +399,7 @@ class MarkerLocations(
                     "Matosinhos",
                     getRandomPercentageOfNumber(700.0), hashSetOf()
                 )
+
                 c.contains("castelo maia") -> return MarkerLocations(
                     "Pavilhão do Castelo da Maia Ginásio Clube",
                     LatLng(41.26829098264683, -8.610047715982557),
@@ -388,6 +408,7 @@ class MarkerLocations(
                     "Castelo da Maia",
                     getRandomPercentageOfNumber(1000.0), hashSetOf()
                 )
+
                 c.contains("bastardo") -> return MarkerLocations(
                     "Pavilhão Municipal Vitalino Fagundes",
                     LatLng(38.691631075899, -27.080120882875562),
@@ -396,6 +417,7 @@ class MarkerLocations(
                     "Praia da Vitória",
                     getRandomPercentageOfNumber(2500.0), hashSetOf()
                 )
+
                 c.contains("viana") -> return MarkerLocations(
                     "Pavilhão Municipal de Santa Maria Maior",
                     LatLng(41.70136495042742, -8.822399098678684),
@@ -404,6 +426,7 @@ class MarkerLocations(
                     "Viana do Castelo",
                     getRandomPercentageOfNumber(450.0), hashSetOf()
                 )
+
                 c.contains("academica de espinho") -> return MarkerLocations(
                     "Pavilhão Arquitecto Jerónimo Reis",
                     LatLng(41.01374756691682, -8.63902205443591),
@@ -412,6 +435,7 @@ class MarkerLocations(
                     "Espinho",
                     getRandomPercentageOfNumber(1800.0), hashSetOf()
                 )
+
                 c.contains("gondomar") -> return MarkerLocations(
                     "Ala de Nun'Álvares de Gondomar",
                     LatLng(41.134506681050254, -8.533614019639996),
@@ -420,6 +444,7 @@ class MarkerLocations(
                     "Gondomar",
                     getRandomPercentageOfNumber(2500.0), hashSetOf()
                 )
+
                 c.contains("esmoriz") -> return MarkerLocations(
                     "Pavilhão Esmoriz Ginásio Clube",
                     LatLng(40.95670514512168, -8.642876548326148),
@@ -428,6 +453,7 @@ class MarkerLocations(
                     "Esmoriz",
                     getRandomPercentageOfNumber(500.0), hashSetOf()
                 )
+
                 c.contains("santo tirso") -> return MarkerLocations(
                     "Pavilhão Municipal de Santo Tirso",
                     LatLng(41.3377753047835, -8.474918395352695),
@@ -436,6 +462,7 @@ class MarkerLocations(
                     "Santo Tirso",
                     getRandomPercentageOfNumber(3000.0), hashSetOf()
                 )
+
                 c.contains("oeiras") -> return MarkerLocations(
                     "Pavilhão São Julião da Barra",
                     LatLng(38.68363166196828, -9.318070647857198),
@@ -444,6 +471,7 @@ class MarkerLocations(
                     "Oeiras",
                     getRandomPercentageOfNumber(600.0), hashSetOf()
                 )
+
                 c.contains("mamede") -> return MarkerLocations(
                     "Pavilhão Eduardo Soares",
                     LatLng(41.19766195038525, -8.616530107961713),
@@ -452,6 +480,7 @@ class MarkerLocations(
                     "São Mamede de Infesta",
                     getRandomPercentageOfNumber(5000.0), hashSetOf()
                 )
+
                 c.contains("braga") -> return MarkerLocations(
                     "Pavilhão Flávio Sá Leite",
                     LatLng(41.53991280563391, -8.419730719663232),
@@ -460,6 +489,7 @@ class MarkerLocations(
                     "Braga",
                     getRandomPercentageOfNumber(5000.0), hashSetOf()
                 )
+
                 c.contains("leoes") -> return MarkerLocations(
                     "Pavilhão Leões Porto Salvo",
                     LatLng(38.72291605915125, -9.304001061345282),
@@ -468,6 +498,7 @@ class MarkerLocations(
                     "Lisboa",
                     getRandomPercentageOfNumber(660.0), hashSetOf()
                 )
+
                 c.contains("ferreira") -> return MarkerLocations(
                     "Pavilhao Municipal Ferreira do Zêzere",
                     LatLng(39.69596594198302, -8.2873292625282),
@@ -476,6 +507,7 @@ class MarkerLocations(
                     "Ferreira do Zêzere",
                     getRandomPercentageOfNumber(700.0), hashSetOf()
                 )
+
                 c.contains("caxinas") -> return MarkerLocations(
                     "Pavilhão de Desportos de Vila do Conde",
                     LatLng(41.36090165516108, -8.739887187836292),
@@ -484,6 +516,7 @@ class MarkerLocations(
                     "Vila do Conde",
                     getRandomPercentageOfNumber(1800.0), hashSetOf()
                 )
+
                 c.contains("quinta") -> return MarkerLocations(
                     "Pavilhão Desportivo dos Lombos",
                     LatLng(38.68746387601535, -9.325841487195904),
@@ -492,6 +525,7 @@ class MarkerLocations(
                     "Carcavelos",
                     getRandomPercentageOfNumber(650.0), hashSetOf()
                 )
+
                 c.contains("fundao") -> return MarkerLocations(
                     "Pavilhão Municipal do Fundão",
                     LatLng(40.13733176666971, -7.502599120596639),
@@ -500,6 +534,7 @@ class MarkerLocations(
                     "Fundão",
                     getRandomPercentageOfNumber(1056.0), hashSetOf()
                 )
+
                 c.contains("electrico") -> return MarkerLocations(
                     "Pavilhão Gimnodesportivo de Ponte de Sor",
                     LatLng(39.252704125199465, -8.010135255178072),
@@ -508,6 +543,7 @@ class MarkerLocations(
                     "Ponte de Sor",
                     getRandomPercentageOfNumber(720.0), hashSetOf()
                 )
+
                 c.contains("torreense") -> return MarkerLocations(
                     "Pavilhão Fisica de Torres Vedras",
                     LatLng(39.087135909879756, -9.255647854130121),
@@ -516,6 +552,7 @@ class MarkerLocations(
                     "Torres Vedras",
                     getRandomPercentageOfNumber(1000.0), hashSetOf()
                 )
+
                 c.contains("candoso") -> return MarkerLocations(
                     "Pavilhão Desportivo do CR Candoso",
                     LatLng(41.426521156021124, -8.336523112986661),
@@ -524,6 +561,7 @@ class MarkerLocations(
                     "Guimarães",
                     getRandomPercentageOfNumber(700.0), hashSetOf()
                 )
+
                 else -> return MarkerLocations(
                     "Pavilhão Desportivo Municipal de Vila Nova de Gaia",
                     LatLng(41.11807460945089, -8.59316885960061),
@@ -531,6 +569,21 @@ class MarkerLocations(
                     2000,
                     "Vila Nova de Gaia",
                     getRandomPercentageOfNumber(2000.0), hashSetOf()//mutableListOf()
+                )
+            }
+        }
+
+        fun getStadiumForFootballCup(stadiumName: String): MarkerLocations {
+            return when (stadiumName.lowercase()) {
+                "Estádio Dr. Magalhães Pessoa" -> MarkerLocations(
+                    stadiumName,
+                    LatLng(39.74868443333066, -8.812805985922838), Type.STADIUM, 24000, "Leiria",
+                    getRandomPercentageOfNumber(24000.0), hashSetOf()
+                )
+                else -> MarkerLocations(
+                    stadiumName,
+                    LatLng(39.74868443333066, -8.812805985922838), Type.STADIUM, 24000, "Leiria",
+                    getRandomPercentageOfNumber(24000.0), hashSetOf()
                 )
             }
         }

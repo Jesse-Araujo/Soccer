@@ -1,25 +1,21 @@
 package com.example.soocer.location
 
-import android.app.ActivityManager
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.location.Location
 import android.os.IBinder
-import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.NotificationCompat
 import com.example.soocer.MainActivity
 import com.example.soocer.R
 import com.example.soocer.auxiliary.getDistanceBetweenTwoPoints
 import com.example.soocer.data.FirebaseFunctions
-import com.example.soocer.events.Events
+import com.example.soocer.data.Events
 import com.example.soocer.listeners.OnLocationChangedListener
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
-import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -121,7 +117,7 @@ class LocationService : Service() {
         startForeground(1, notification.build())
     }
 
-    private fun areSetsEqual(set1:HashSet<Events>,set2:HashSet<Events>) :Boolean {
+    private fun areSetsEqual(set1:HashSet<Events>, set2:HashSet<Events>) :Boolean {
         if(set1.size != set2.size) return false
         set1.forEach { if(!set2.contains(it)) return false }
         return true

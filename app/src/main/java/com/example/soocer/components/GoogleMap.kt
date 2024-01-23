@@ -10,9 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.soocer.auxiliary.Global
-import com.example.soocer.data.FirebaseFunctions
 import com.example.soocer.data.MarkerLocations
-import com.example.soocer.events.Events
+import com.example.soocer.data.Events
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraMoveStartedReason
 import com.google.maps.android.compose.CameraPositionState

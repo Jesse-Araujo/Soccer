@@ -1,19 +1,16 @@
 package com.example.soocer.auxiliary
 
-
 import android.content.Context
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import com.example.soocer.data.MarkerLocations
-import com.example.soocer.events.EventType
+import com.example.soocer.data.EventType
 import com.google.android.gms.maps.model.LatLng
 import java.io.File
 import java.io.FileWriter
-import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
 import kotlin.math.atan2
 import kotlin.math.ceil
 import kotlin.math.cos
@@ -21,10 +18,9 @@ import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-
 class Global{
     companion object{
-        val size = 40
+        const val size = 40
         var userId = ""
         val favSports = hashSetOf<String>()
         val upvotes = hashSetOf<String>()
@@ -34,9 +30,7 @@ class Global{
 @RequiresApi(Build.VERSION_CODES.O)
 fun isYesterday(localDateTime: LocalDateTime): Boolean {
     val todayStart = LocalDateTime.now().toLocalDate().atStartOfDay()
-    val x = !localDateTime.toLocalDate().isEqual(todayStart.toLocalDate())
-    Log.d("x",x.toString())
-    return x
+    return !localDateTime.toLocalDate().isEqual(todayStart.toLocalDate())
 }
 
 
@@ -60,7 +54,8 @@ fun dateStringToLocalDateTime(date: String?): LocalDateTime {
     return LocalDateTime.parse(date, formatter)
 }
 
-fun getMarker(homeTeam : String,eventType: EventType) : MarkerLocations{
+fun getMarker(homeTeam : String,eventType: EventType,cupGame:String,stadiumName : String) : MarkerLocations{
+    if(!cupGame.lowercase().contains("season")) return MarkerLocations.getStadiumForFootballCup(stadiumName)
     return when (eventType) {
         EventType.FOOTBALL -> MarkerLocations.getClubStadium(homeTeam)
         EventType.HANDBALL -> MarkerLocations.getClubPavilion(homeTeam)

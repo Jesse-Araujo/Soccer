@@ -2,6 +2,7 @@ package com.example.soocer.components
 
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -32,8 +33,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toSize
-import com.example.soocer.auxiliary.getDistanceBetweenTwoPoints
-import com.example.soocer.events.Events
+import com.example.soocer.data.Events
 import com.google.android.gms.maps.model.LatLng
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -108,12 +108,10 @@ fun AutoComplete(
                         value = category,
                         onValueChange = {
                             category = it
-                            Log.d("recomendaçoes","")
                             showRecommendations.value = true
-                        },
+                        }, shape = RoundedCornerShape(15.dp),
                         colors = TextFieldDefaults.textFieldColors(
                             containerColor = Color.White,
-                            //backgroundColor = Color.Transparent,
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent,
                             cursorColor = Color.Black
@@ -214,7 +212,7 @@ fun CategoryItems(
     }
 }
 
-fun searchEvent(title: String, events: MutableList<Events>?,filteredEvents: MutableList<Events>?,currentSearch: MutableList<Events>?,distance : MutableState<String>,userLoc : LatLng,onFinished:  (Boolean,LatLng) -> Unit) {
+fun searchEvent(title: String, events: MutableList<Events>?, filteredEvents: MutableList<Events>?, currentSearch: MutableList<Events>?, distance : MutableState<String>, userLoc : LatLng, onFinished:  (Boolean, LatLng) -> Unit) {
     Log.d("vou pesquisar",title)
     filteredEvents?.clear()
     when {

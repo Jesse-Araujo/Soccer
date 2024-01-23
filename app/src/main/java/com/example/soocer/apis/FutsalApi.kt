@@ -1,7 +1,9 @@
-package com.example.soocer.events
+package com.example.soocer.apis
 
 import android.os.Build
 import com.example.soocer.auxiliary.dateStringToLocalDateTime
+import com.example.soocer.data.EventType
+import com.example.soocer.data.Events
 import com.example.soocer.data.MarkerLocations
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -71,7 +73,7 @@ class FutsalApi {
                             EventType.FUTSAL,
                             leagueName,
                             dateStringToLocalDateTime(scheduledDate),
-                            "",
+                            "season",
                             "https://static.flashscore.com/res/image/data/MVDIySnd-SSloczGk.png",
                             homeTeam,
                             getFutsalLogos(homeTeam),

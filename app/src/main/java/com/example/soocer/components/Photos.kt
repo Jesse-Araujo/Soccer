@@ -4,6 +4,7 @@ package com.example.soocer.components
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.drawable.Icon
 import android.net.Uri
 import android.util.Base64
 import java.io.ByteArrayOutputStream
@@ -11,14 +12,22 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -30,26 +39,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.soocer.R
 import java.io.IOException
 
 
 @Composable
 fun PhotoSelectorView(context: Context,bitmapFromUser : MutableState<Bitmap?>,maxSelectionCount: Int = 1) {
-    var bitmap by remember {
-        //mutableStateOf<List<Uri?>>(emptyList())
-        mutableStateOf(bitmapFromUser)
-    }
-    //if(selectedImages.isEmpty()) selectedImages = listOf(bitmap.value)
-
-    val buttonText = if (maxSelectionCount > 1) {
-        "Select up to $maxSelectionCount photos"
-    } else {
-        "Select a photo"
-    }
+    val bitmap by remember { mutableStateOf(bitmapFromUser) }
 
     val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
@@ -96,10 +98,18 @@ fun PhotoSelectorView(context: Context,bitmapFromUser : MutableState<Bitmap?>,ma
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Button(onClick = {
-            launchPhotoPicker()
-        }) {
-            Text(buttonText)
+        Row {
+            Button(onClick = {
+                launchPhotoPicker()
+            }, colors = ButtonDefaults.buttonColors(Color.Transparent)) {
+                Image(painter = painterResource(id = R.drawable.picture), contentDescription = "gallery_btn", modifier = Modifier.size(50.dp))
+            }
+            Spacer(modifier = Modifier.size(15.dp))
+            Button(onClick = {
+                bitmap.value = null
+            }, colors = ButtonDefaults.buttonColors(Color.Transparent)) {
+                Image(painter = painterResource(id = R.drawable.delete), contentDescription = "delete_img_btn", modifier = Modifier.size(50.dp))
+            }
         }
 
         ImageLayoutView(context,bitmap = bitmap.value)
@@ -115,7 +125,10 @@ fun ImageLayoutView(context: Context,bitmap: Bitmap?/*List<Uri?>*/) {
             AsyncImage(
                 model = bitmap,//selectedImages[0],
                 contentDescription = null,
-                modifier = Modifier.fillMaxWidth()/*width(350.dp)*/.height(200.dp).padding(top = 15.dp, bottom = 15.dp),//.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()/*width(350.dp)*/
+                    .height(400.dp)
+                    .padding(top = 15.dp, bottom = 15.dp),//.fillMaxWidth(),
                 contentScale = ContentScale.Fit
             )
        //}

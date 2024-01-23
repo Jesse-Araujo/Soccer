@@ -13,15 +13,12 @@ import com.example.soocer.auxiliary.isYesterday
 import com.example.soocer.auxiliary.newAverage
 import com.example.soocer.auxiliary.updateAverage
 import com.example.soocer.components.stringToBitmap
-import com.example.soocer.events.Events
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.GenericTypeIndicator
 import com.google.firebase.database.ValueEventListener
 import java.time.LocalDateTime
-import kotlin.math.ceil
 
 class FirebaseFunctions {
 
@@ -105,7 +102,7 @@ class FirebaseFunctions {
                                 homeTeamLogo,
                                 awayTeam,
                                 awayTeamLogo,
-                                getMarker(homeTeam, eventType),
+                                getMarker(homeTeam, eventType,city,""),
                                 //convertStringToBoolean(importantGame),
                                 importantGame,
                                 upvotes.toInt(),

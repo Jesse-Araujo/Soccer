@@ -49,7 +49,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -76,12 +80,12 @@ fun ReviewMarkerWindow(navController: NavController, context: Context, markerNam
     val markerQuality = remember { mutableStateOf(markerReview.value.quality) }
     /*val markerComments = remember { mutableStateOf(hashSetOf<String>()) }
     val markerPhotos = remember { mutableStateOf(mutableListOf<Bitmap>()) }*/
-    val reviews = remember{ mutableStateOf(mutableListOf<Triple<String,String,Bitmap?>>())}
+    val reviews = remember { mutableStateOf(mutableListOf<Triple<String, String, Bitmap?>>()) }
     var userHasAlreadyReviewedThisMarker by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         CoroutineScope(Dispatchers.IO).launch {
             FirebaseFunctions.getMarkerReview(markerName) { review, triple ->
-                Log.d("xiu","xiu")
+                Log.d("xiu", "xiu")
                 globalRating.value = review.globalRating
                 markerComfort.value = review.comfort
                 markerAccessibility.value = review.accessibility
@@ -102,34 +106,36 @@ fun ReviewMarkerWindow(navController: NavController, context: Context, markerNam
             }
         }
     }
-    val showOverallRating = remember { mutableStateOf(true) }
-    if (showOverallRating.value) {
-        MarkerReview(
-            context = context,
-            navController = navController,
-            markerReview = markerReview,
-            showOverallRating = showOverallRating,
-            reviews = reviews,
-            /*markerComments = markerComments,
-            markerPhotos = markerPhotos,*/
-            globalRating = globalRating,
-            comfort = markerComfort,
-            accessibility = markerAccessibility,
-            quality = markerQuality,
-            markerName = markerName
-        )
-    } else {
-        UserReview(
-            context = context,
-            navController = navController,
-            markerName = markerName,
-            globalReview = markerReview,
-            userReview = userReview,
-            showOverallRating = showOverallRating,
-            oldUserReview = oldUserReview,
-            userHasAlreadyReviewedThisMarker = userHasAlreadyReviewedThisMarker,
-        )
+    Box(modifier = Modifier.fillMaxSize()){
+        val showOverallRating = remember { mutableStateOf(true) }
+        if (showOverallRating.value) {
+            MarkerReview(
+                context = context,
+                navController = navController,
+                markerReview = markerReview,
+                showOverallRating = showOverallRating,
+                reviews = reviews,
+                globalRating = globalRating,
+                comfort = markerComfort,
+                accessibility = markerAccessibility,
+                quality = markerQuality,
+                markerName = markerName
+            )
+        } else {
+            UserReview(
+                context = context,
+                navController = navController,
+                markerName = markerName,
+                globalReview = markerReview,
+                userReview = userReview,
+                showOverallRating = showOverallRating,
+                oldUserReview = oldUserReview,
+                userHasAlreadyReviewedThisMarker = userHasAlreadyReviewedThisMarker,
+            )
+        }
+        BottomNavigator(navController = navController)
     }
+
 }
 
 
@@ -138,7 +144,7 @@ fun MarkerReview(
     context: Context,
     navController: NavController,
     markerReview: MutableState<Review>,
-    reviews : MutableState<MutableList<Triple<String,String,Bitmap?>>>,
+    reviews: MutableState<MutableList<Triple<String, String, Bitmap?>>>,
     showOverallRating: MutableState<Boolean>,
     globalRating: MutableState<Int>,
     comfort: MutableState<Int>,
@@ -157,16 +163,42 @@ fun MarkerReview(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = markerName, fontSize = 25.sp, fontWeight = FontWeight.Bold,modifier = Modifier.padding(bottom = 15.dp))
+            Text(
+                text = markerName,
+                fontSize = 25.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 15.dp)
+            )
             Text(text = "Overall review of this place by our users")
             StarRatingSample(globalRating, false)
-            Text(text = "Comfort", textAlign = TextAlign.Start)
+
+            Row (
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp)){
+                Text(text = "Comfort", Modifier.padding(start = 25.dp))
+            }
             StarRatingSample(comfort, false)
-            Text(text = "Accessibility")
+            Row (
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp)){
+                Text(text = "Accessibility", Modifier.padding(start = 25.dp))
+            }
             StarRatingSample(accessibility, false)
-            Text(text = "Quality")
+            Row (
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp)){
+                Text(text = "Atmosphere", Modifier.padding(start = 25.dp))
+            }
             StarRatingSample(quality, false)
-            Text(text = "User reviews")
+            Row (
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp)){
+                Text(text = "User reviews", Modifier.padding(start = 25.dp))
+            }
             ReviewsBox(reviews = reviews.value)
             Button(onClick = { showOverallRating.value = false }) {
                 Text(text = "Make your rating")
@@ -176,49 +208,62 @@ fun MarkerReview(
 }
 
 @Composable
-fun ReviewsBox(reviews: MutableList<Triple<String,String,Bitmap?>>) {
-    Log.d("reviews size",reviews.size.toString())
-    Log.d("reviews",reviews.toString())
-    if(reviews.isNotEmpty()) {
+fun ReviewsBox(reviews: MutableList<Triple<String, String, Bitmap?>>) {
+    if (reviews.isNotEmpty()) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(15.dp)
         ) {
-            LazyColumn(modifier = Modifier
-                .fillMaxWidth()
-                .height(380.dp)
-                .padding(bottom = 15.dp), state = rememberLazyListState()
-                , verticalArrangement = Arrangement.Center) {
-                items(reviews.toList(),key = { it.first+it.second }) { review ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(380.dp)
+                    .padding(bottom = 15.dp),
+                state = rememberLazyListState(),
+                verticalArrangement = Arrangement.Center
+            ) {
+                items(reviews.toList(), key = { it.first + it.second }) { review ->
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(bottom = 15.dp)
                             .background(
-                                color = Color.White, // Background color of the card
-                                shape = RoundedCornerShape(16.dp) // Adjust the corner radius as needed
+                                color = Color.White,
+                                shape = RoundedCornerShape(16.dp)
                             )
                             .border(
-                                width = 2.dp, // Border width
-                                color = MaterialTheme.colorScheme.background, // Border color
-                                shape = RoundedCornerShape(16.dp) // Adjust the corner radius to match the background
+                                width = 2.dp,
+                                color = MaterialTheme.colorScheme.background,
+                                shape = RoundedCornerShape(16.dp)
                             )
                     ) {
-                        Column( modifier = Modifier
-                            .padding(bottom = 15.dp)
-                            .fillMaxSize()) {
+                        Column(
+                            modifier = Modifier
+                                .padding(bottom = 15.dp)
+                                .fillMaxSize()
+                        ) {
                             Row(Modifier.padding(top = 10.dp, start = 10.dp)) {
-                                Image(painter = painterResource(id = R.drawable.ic_user), contentDescription = "ic_user",Modifier.size(25.dp))
-                                Text(text = review.first,modifier = Modifier.padding(start = 10.dp, end = 5.dp))
-                                //Spacer(modifier = Modifier.size(10.dp))
-                                Image(painter = painterResource(id = R.drawable.star), contentDescription = "ic_star",Modifier.size(20.dp))
+                                Image(
+                                    painter = painterResource(id = R.drawable.ic_user),
+                                    contentDescription = "ic_user",
+                                    Modifier.size(25.dp)
+                                )
+                                Text(
+                                    text = review.first,
+                                    modifier = Modifier.padding(start = 10.dp, end = 5.dp)
+                                )
+                                Image(
+                                    painter = painterResource(id = R.drawable.star),
+                                    contentDescription = "ic_star",
+                                    Modifier.size(20.dp)
+                                )
                             }
                             Text(text = review.second, modifier = Modifier.padding(16.dp))
-                            if(review.third != null) {
+                            if (review.third != null) {
                                 AsyncImage(
                                     model = review.third,
-                                    contentDescription = review.first+review.second,
+                                    contentDescription = review.first + review.second,
                                     modifier = Modifier
                                         .padding(start = 25.dp, end = 25.dp)
                                         .height(220.dp)
@@ -270,16 +315,51 @@ fun UserReview(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = "Global Rating")
+            Row (
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp)){
+                Text(text = "Global Rating", Modifier.padding(start = 25.dp))
+            }
             StarRatingSample(globalRating)
-            Text(text = "Comfort")
+            Row (
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp)){
+                Text(text = "Comfort", Modifier.padding(start = 25.dp))
+            }
             StarRatingSample(comfort)
-            Text(text = "Accessibility")
+            Row (
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp)){
+                Text(text = "Accessibility", Modifier.padding(start = 25.dp))
+            }
             StarRatingSample(accessibility)
-            Text(text = "Quality")
+            Row (
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp)){
+                Text(text = "Atmosphere", Modifier.padding(start = 25.dp))
+            }
             StarRatingSample(quality)
+            Spacer(modifier = Modifier.size(10.dp))
             PhotoSelectorView(context, bitmap)
-            TextField(value = comment.value, onValueChange = { comment.value = it })
+            val maxLines = 5
+            val maxChars = 100
+            TextField(
+                value = comment.value,
+                onValueChange = { //comment.value = it
+                    val lines = it.count { ch -> ch == '\n' } + 1
+                    if (lines <= maxLines && comment.value.length < maxChars) {
+                        comment.value = it
+                    }
+                },
+                maxLines = 5,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp)
+            )
             Row(horizontalArrangement = Arrangement.SpaceEvenly) {
                 Button(onClick = {
                     submit(
@@ -308,7 +388,6 @@ fun UserReview(
         }
     }
 }
-
 
 fun submit(
     oldReview: Review,
@@ -352,10 +431,13 @@ fun submit(
                     currentReview.photo
                 )
             ) {
-                navController.popBackStack(Screens.Review.route,true)
-                navController.navigate(Screens.Review.route.replace(
-                    oldValue = "{markerName}",
-                    newValue = markerName))
+                navController.popBackStack(Screens.Review.route, true)
+                navController.navigate(
+                    Screens.Review.route.replace(
+                        oldValue = "{markerName}",
+                        newValue = markerName
+                    )
+                )
             }
 
         }

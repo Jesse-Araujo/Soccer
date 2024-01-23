@@ -1,13 +1,17 @@
-package com.example.soocer.events
+package com.example.soocer.data
 
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.MutableState
+import com.example.soocer.apis.BasketballApi
+import com.example.soocer.apis.FootballApi
+import com.example.soocer.apis.FutsalApi
+import com.example.soocer.apis.HandballAPI
+import com.example.soocer.apis.VolleyballApi
 import com.example.soocer.auxiliary.dateStringToLocalDateTime
 import com.example.soocer.auxiliary.getDistanceBetweenTwoPoints
 import com.example.soocer.auxiliary.getTimeFilterValue
-import com.example.soocer.data.MarkerLocations
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -53,6 +57,7 @@ class Events(
 
     var homeOdd = ""
     var awayOdd = ""
+    fun isCupGame(): Boolean = !city.lowercase().contains("season")
 
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -115,37 +120,17 @@ class Events(
             }
         }
 
-        //TODO adicionar champions, liga europa, taça da liga, taça de Portugal
-        @RequiresApi(Build.VERSION_CODES.O)
         fun getFootballEvents(onFinished: (List<Events>?) -> Unit) {
-            val apiUrl = "https://v3.football.api-sports.io/fixtures"
-            val leagueId = 94
-            val season = "2023"
-
-            val apiKey = "d0e33784e246dddf42f91ba3633549b8"
-
-            val client = OkHttpClient()
-
-            val request = Request.Builder()
-                .url("$apiUrl?league=$leagueId&season=$season")
-                .header("x-rapidapi-host", "v3.football.api-sports.io")
-                .header("x-rapidapi-key", apiKey)
-                .build()
-
             CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    val response = client.newCall(request).execute()
-                    val events = createFootballEvents(response.body?.string())
-                    withContext(Dispatchers.Main) {
-                        onFinished(events)
-                    }
-                } catch (e: Exception) {
-                    withContext(Dispatchers.Main) {
-                        onFinished(null)
-                    }
+                val leagueEvents = FootballApi.getFootballEvents(){}
+                val cupEvents = FootballApi.getFootballCupGames()
+                val events = mutableListOf<Events>()
+                leagueEvents?.forEach { events.add(it) }
+                cupEvents?.forEach { events.add(it) }
+                withContext(Dispatchers.Main) {
+                    onFinished(events.toList())
                 }
             }
-
         }
 
         @RequiresApi(Build.VERSION_CODES.O)
@@ -153,50 +138,6 @@ class Events(
             return Instant.ofEpochSecond(timestamp)
                 .atZone(ZoneId.systemDefault())
                 .toLocalDateTime()
-        }
-
-        @RequiresApi(Build.VERSION_CODES.O)
-        fun createFootballEvents(body: String?): List<Events>? {
-            val events = mutableListOf<Events>()
-            if (body == null) {
-                return null
-            }
-            val output = JSONObject(body)
-            val jsonArray = output.getJSONArray("response") as JSONArray
-            for (i in 0 until jsonArray.length()) {
-                val jsonObject1 = jsonArray.getJSONObject(i)
-                val event = Events(
-                    jsonObject1.getJSONObject("fixture").getInt("id"),
-                    EventType.FOOTBALL,
-                    jsonObject1.getJSONObject("league").getString("name"),
-                    convertTimestampToTime(
-                        jsonObject1.getJSONObject("fixture").getLong("timestamp")
-                    ),
-                    jsonObject1.getJSONObject("fixture").getJSONObject("venue").getString("city"),
-                    jsonObject1.getJSONObject("league").getString("logo"),
-                    jsonObject1.getJSONObject("teams").getJSONObject("home").getString("name"),
-                    jsonObject1.getJSONObject("teams").getJSONObject("home").getString("logo"),
-                    jsonObject1.getJSONObject("teams").getJSONObject("away").getString("name"),
-                    jsonObject1.getJSONObject("teams").getJSONObject("away").getString("logo"),
-                    MarkerLocations.getClubStadium(
-                        jsonObject1.getJSONObject("teams").getJSONObject("home").getString("name")
-                    ),
-                    isBigGame(
-                        jsonObject1.getJSONObject("teams").getJSONObject("home").getString("name"),
-                        jsonObject1.getJSONObject("teams").getJSONObject("away").getString("name")
-                    ), 0, mutableListOf()
-                )
-                events.add(event)
-            }
-            val currentDate = LocalDateTime.now()
-            val endDate = currentDate.plusDays(60)
-
-            return events.filter { event ->
-                val eventDate = event.date
-                eventDate.isEqual(currentDate) || (eventDate.isAfter(currentDate) && eventDate.isBefore(
-                    endDate
-                ))
-            }
         }
 
         fun isBigGame(homeTeam: String, awayTeam: String): Boolean {
@@ -277,7 +218,10 @@ class Events(
             allEvents?.forEach { event ->
                 val id = "${event.id}+${event.eventType.type}"
                 if (ids.contains(id)) {
-                    if (event.eventType.type == "Basketball" && (/*event.homeTeam == "Vizela" ||*/ event.homeTeam.contains("Sporting"))) {
+                    if (event.eventType.type == "Basketball" && (/*event.homeTeam == "Vizela" ||*/ event.homeTeam.contains(
+                            "Sporting"
+                        ))
+                    ) {
                         Log.d("event", event.toString())
                         Log.d("event date", event.date.toString())
                         Log.d("time", time.toString())
@@ -299,8 +243,9 @@ class Events(
                     if (event.date.toLocalDate()
                             .isEqual(today.toLocalDate()) || (event.date.toLocalDate()
                             .isAfter(today.toLocalDate()) && (event.date.toLocalDate().isBefore(
-                            maxTime.toLocalDate()) || event.date.toLocalDate().isEqual(maxTime.toLocalDate())
-                        ))
+                            maxTime.toLocalDate()
+                        ) || event.date.toLocalDate().isEqual(maxTime.toLocalDate())
+                                ))
                     ) {
                         if (getDistanceBetweenTwoPoints(
                                 event.markerLocations.latLng,

@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,10 +28,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.soocer.R
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Switch
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -38,13 +36,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import com.example.soocer.Screens
 import com.example.soocer.auxiliary.Global
 import com.example.soocer.auxiliary.clearFile
 import com.example.soocer.data.FirebaseFunctions
-import com.example.soocer.events.EventType
+import com.example.soocer.data.EventType
 import com.example.soocer.location.LocationService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -92,32 +92,37 @@ fun Home(
                 .background(color)
         ) {
             Row(
-                Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     text = "Sports Events",
                     fontSize = 36.sp,
                     fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.weight(1f)
                 )
 
                 Image(
                     modifier = Modifier
-                        .size(52.dp)
+                        .size(52.dp).weight(0.2f)
                         .combinedClickable(
                             onClick = {
                                 Global.favSports.clear()
                                 Global.userId = ""
+                                Global.upvotes.clear()
                                 clearFile(appContext)
-                                navController.navigate(Screens.SignIn.route)
+                                navController.navigate(Screens.SignIn.route) {
+                                    popUpTo(0)
+                                }
+                                //navController.navigate(Screens.SignIn.route)
                             },
                         ),
                     painter = painterResource(id = R.drawable.logout_variant),
                     contentDescription = "Logout",
                 )
-
             }
+
 
         }
         Column(modifier = Modifier.padding(top = 100.dp)) {
@@ -153,7 +158,7 @@ fun SportCard(
     size: Int,
     img1: String,
     img2: String,
-    favSports: MutableState<HashSet<String>>,navController: NavController
+    favSports: MutableState<HashSet<String>>,navController: NavController,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -171,6 +176,7 @@ fun SportImage(
 ) {
     var show by remember { mutableStateOf(false) }
     show = favSports.value.contains(sport)
+    val needsRounding = sport == EventType.HANDBALL.type || sport == EventType.FUTSAL.type
     Box {
         if (show) {
             Image(
@@ -179,21 +185,37 @@ fun SportImage(
                 modifier = Modifier.size(15.dp)
             )
         }
-        Image(
-            modifier = Modifier
-                .size(size.dp)
-                .combinedClickable(
-                    onClick = { onSportClick(sport, navController) },
-                    onLongClick = {
-                        Log.d("show", show.toString())
-                        show = !show
-                        Log.d("show", show.toString())
-                        onSportLongClick(sport, favSports)
-                    }
-                ),
-            painter = painterResource(id = getId(sport)),
-            contentDescription = "${sport}_img",
-        )
+        if(!needsRounding) {
+            Image(
+                modifier = Modifier
+                    .size(size.dp)
+                    .combinedClickable(
+                        onClick = { onSportClick(sport, navController) },
+                        onLongClick = {
+                            Log.d("show", show.toString())
+                            show = !show
+                            Log.d("show", show.toString())
+                            onSportLongClick(sport, favSports)
+                        }
+                    ),
+                painter = painterResource(id = getId(sport)),
+                contentDescription = "${sport}_img",
+            )
+        }else {
+            Image(
+                modifier = Modifier
+                    .size(size.dp)
+                    .combinedClickable(
+                        onClick = { onSportClick(sport, navController) },
+                        onLongClick = {
+                            show = !show
+                            onSportLongClick(sport, favSports)
+                        }
+                    ),
+                painter = painterResource(id = getId(sport)),
+                contentDescription = "${sport}_img",
+            )
+        }
     }
 }
 
