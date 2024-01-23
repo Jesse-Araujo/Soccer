@@ -144,7 +144,7 @@ fun Home(
                 navController = navController
             )
 
-            LocationServiceControls(appContext, startService)
+            //LocationServiceControls(appContext, startService)
         }
     }
 }
