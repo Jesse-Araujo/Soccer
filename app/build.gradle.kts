@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.soocer"
+    namespace = "com.example.sports"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.soocer"
+        applicationId = "com.example.sports"
         minSdk = 24
         targetSdk = 33
         versionCode = 1

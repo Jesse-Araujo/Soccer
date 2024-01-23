@@ -22,14 +22,14 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Soocer"
+        android:theme="@style/Theme.SportsEvents"
         tools:targetApi="31">
         <service android:name=".location.LocationService" android:foregroundServiceType="location" android:stopWithTask="false"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.Soocer">
+            android:theme="@style/Theme.SportsEvents">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
