@@ -25,6 +25,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
@@ -48,6 +49,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -60,6 +63,7 @@ import com.example.sports.data.Review
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.lang.Math.random
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -203,7 +207,9 @@ fun MarkerReview(
 @Composable
 fun ReviewsBox(reviews: MutableList<Triple<String, String, Bitmap?>>) {
     var showReviews = true
-    reviews.forEach { if(it.second.isEmpty() && it.third == null) showReviews = false }
+    reviews.forEach {if(it.second.isEmpty() && it.third == null) showReviews = false }
+
+
     if (reviews.isNotEmpty() || showReviews) {
         Box(
             modifier = Modifier
@@ -218,7 +224,7 @@ fun ReviewsBox(reviews: MutableList<Triple<String, String, Bitmap?>>) {
                 state = rememberLazyListState(),
                 verticalArrangement = Arrangement.Center
             ) {
-                items(reviews.toList(), key = { it.first + it.second }) { review ->
+                items(reviews.toList()) { review ->
                     if(review.second.isNotEmpty() || review.third != null){
                         Box(
                             modifier = Modifier
@@ -352,6 +358,10 @@ fun UserReview(
                         comment.value = it
                     }
                 },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Done,
+                ),
                 maxLines = 5,
                 modifier = Modifier
                     .fillMaxWidth()

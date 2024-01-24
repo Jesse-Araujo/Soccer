@@ -51,8 +51,8 @@ import com.example.sports.data.FirebaseFunctions
 import com.example.sports.data.MarkerLocations
 import com.example.sports.data.Type
 import com.example.sports.data.Events
-import com.example.sports.weather.Weather
-import com.example.sports.weather.WeatherType
+import com.example.sports.apis.Weather
+import com.example.sports.apis.WeatherType
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraPositionState

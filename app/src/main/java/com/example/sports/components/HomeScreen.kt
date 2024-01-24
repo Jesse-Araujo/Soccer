@@ -108,6 +108,10 @@ fun Home(
                                 Global.userId = ""
                                 Global.upvotes.clear()
                                 clearFile(appContext)
+                                Intent(appContext, LocationService::class.java).apply {
+                                    action = LocationService.ACTION_STOP
+                                    startService(this)
+                                }
                                 navController.navigate(Screens.SignIn.route) {
                                     popUpTo(0)
                                 }
@@ -144,7 +148,7 @@ fun Home(
                 navController = navController
             )
 
-            //LocationServiceControls(appContext, startService)
+            LocationServiceControls(appContext, startService)
         }
     }
 }
@@ -257,7 +261,21 @@ fun LocationServiceControls(appContext: Context, startService: (Intent) -> Compo
             )
         )
     }
-    Row (modifier = Modifier
+    //Start service if switch is on and service is off
+    if (!isLocationServiceRunning) {
+        Intent(appContext, LocationService::class.java).apply {
+            action = LocationService.ACTION_START
+            startService(this)
+        }
+    }/*
+    //Stop service
+    if (!it) {
+        Intent(appContext, LocationService::class.java).apply {
+            action = LocationService.ACTION_STOP
+            startService(this)
+        }
+    }*/
+    /*Row (modifier = Modifier
         .fillMaxWidth()
         .padding(end = 5.dp), horizontalArrangement = Arrangement.End){
         Text(text = "Notifications",modifier = Modifier
@@ -283,8 +301,7 @@ fun LocationServiceControls(appContext: Context, startService: (Intent) -> Compo
                     }
                 }
             )
-
-    }
+    }*/
 }
 
 fun isServiceRunning(context: Context, serviceClass: Class<*>): Boolean {

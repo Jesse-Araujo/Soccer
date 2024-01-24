@@ -9,6 +9,7 @@ import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -19,6 +20,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -38,8 +41,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -68,13 +74,26 @@ fun SignInScreen(
         var loading by remember { mutableStateOf(false) }
 
     var showPassword: Boolean by remember { mutableStateOf(value = false) }
+    val buttonColors = Color(0xFF4CAF50)
 
     Surface(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
-            .padding(28.dp)
+            //.background(Color.White)
+            //.padding(28.dp)
     ) {
+
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center,
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.login),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.FillBounds
+            )
+        }
 
         Column(
             modifier = Modifier
@@ -95,7 +114,11 @@ fun SignInScreen(
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Email") }
+                label = { Text("Email") },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Done,
+                ),
             )
 
             OutlinedTextField(
@@ -128,7 +151,10 @@ fun SignInScreen(
                             )
                         }
                     }
-                }
+                }, keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Done,
+                ),
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -150,14 +176,14 @@ fun SignInScreen(
                            // }
                         }
                     }
-
                     email = ""
                     password = ""
                     Log.d("bt clicked","")
                     //navController.navigate(Screens.Home.route)
                 },
                 contentPadding = PaddingValues(),
-                shape = RoundedCornerShape(7.dp)
+                shape = RoundedCornerShape(7.dp),
+                colors = ButtonDefaults.buttonColors(buttonColors)
             ) {
                 Text(
                     text = "Login",
@@ -170,7 +196,8 @@ fun SignInScreen(
             Spacer(modifier = Modifier.height(10.dp))
             Button(
                 modifier = Modifier
-                    .heightIn(48.dp),
+                    .heightIn(48.dp)
+                    .width(280.dp),
                 onClick = {
                     loading = true
                     if(email.isNotEmpty() && password.isNotEmpty()) signViewModel.register(email, password){
@@ -184,9 +211,10 @@ fun SignInScreen(
                     Log.d("registered btn clicked","")
                     //navController.navigate(Screens.Home.route)
                 },
+                //colors = ButtonDefaults.buttonColors(Color.Transparent),
+                colors = ButtonDefaults.buttonColors(buttonColors),
                 contentPadding = PaddingValues(),
-                colors = ButtonDefaults.buttonColors(Color.Transparent),
-                shape = RoundedCornerShape(50.dp)
+                shape = RoundedCornerShape(7.dp)
             ) {
                 Text(
                     text = "Register",

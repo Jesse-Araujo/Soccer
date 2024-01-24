@@ -1,11 +1,14 @@
 package com.example.sports.location
 
+import android.app.ForegroundServiceTypeException
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.IBinder
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.NotificationCompat
 import com.example.sports.MainActivity
@@ -69,20 +72,37 @@ class LocationService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
         )
 
-        val notification = NotificationCompat.Builder(this, "location")
+        val dismissIntent = Intent(this, NotificationDismissReceiver::class.java)
+        dismissIntent.action = "DISMISS_NOTIFICATION_ACTION"
+        val dismissPendingIntent = PendingIntent.getBroadcast(
+            this,
+            70,
+            dismissIntent,
+            PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        /*val notification = NotificationCompat.Builder(this, "location")
             .setContentTitle("Tracking location")
             //.setContentText("Gps disabled or permission not granted!")
             .setContentText("Events nearby: 0")
             .setSmallIcon(R.drawable.ic_launcher_background)
             .setContentIntent(pendingIntent)
-            .setOngoing(true)
+            .setOngoing(false).setAutoCancel(true)*/
 
+        val notification = NotificationCompat.Builder(this, "location")
+            //.setContentTitle("Tracking location")
+            //.setContentText("Events nearby: 0")
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentIntent(pendingIntent)
+            .setOngoing(false)
+            .setAutoCancel(true)
+            // Add a dismiss action
+            /*.addAction(
+                R.drawable.delete,
+                getString(R.string.dismiss),
+                dismissPendingIntent
+            )*/
 
-        /*GPSChecker(baseContext) { gpsIsOnline, loc ->
-            if(!gpsIsOnline) {
-
-            }
-        }*/
 
         val notificationManager =
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -102,18 +122,26 @@ class LocationService : Service() {
                         eventsCloseBy.add(it)
                     }
                 }
+                Log.d("loc notifications","$lat, $long")
+                Log.d("events notifications",eventsCloseBy.size.toString())
                 if(events.isNotEmpty() && eventsCloseBy.isNotEmpty() && !areSetsEqual(eventsCheck,eventsCloseBy)) {
                     val updateNotification = notification.setContentText(
                         "Events Nearby: ${eventsCloseBy.size}"
                     )
-                    notificationManager.notify(1, updateNotification.build())
+                    /*.setOngoing(false).setAutoCancel(true)
+                        .addAction(
+                        R.drawable.delete,
+                        getString(R.string.dismiss),
+                        dismissPendingIntent
+                    )*/
+                    notificationManager.notify("notify tag",1, updateNotification.build())
                 }
                 eventsCheck.clear()
                 eventsCheck.addAll(eventsCloseBy)
                 eventsCloseBy.clear()
                 //notificationManager.notify(1, updateNotification.build())
             }.launchIn(serviceScope)
-
+        startService(intent)
         startForeground(1, notification.build())
     }
 
@@ -136,5 +164,18 @@ class LocationService : Service() {
     companion object {
         const val ACTION_START = "ACTION_START"
         const val ACTION_STOP = "ACTION_STOP"
+    }
+}
+
+class NotificationDismissReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context?, intent: Intent?) {
+        if (intent?.action == "DISMISS_NOTIFICATION_ACTION") {
+            // Handle notification dismissal here
+            Log.d("NotificationDismiss", "Received broadcast. Dismissing notification.")
+            //val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val notificationManager = context?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            //notificationManager.cancel(1)
+            notificationManager.cancel("notify tag",1)
+        }
     }
 }

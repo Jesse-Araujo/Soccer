@@ -38,8 +38,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -56,7 +58,8 @@ import com.example.sports.data.Events
 import com.example.sports.apis.OddAPI
 import com.example.sports.location.DefaultLocationClient
 import com.example.sports.location.GPSChecker
-import com.example.sports.weather.WeatherType
+import com.example.sports.apis.WeatherType
+import com.example.sports.location.LocationService
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
@@ -74,6 +77,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -88,6 +92,7 @@ fun log(events: List<Events>?) {
 }
 
 
+@OptIn(ExperimentalComposeUiApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("VisibleForTests")
 @Composable
@@ -107,9 +112,10 @@ fun MapScreen(
     var everythingLoaded by remember { mutableStateOf(false) }
     everythingLoaded =
         !footballLoading && !handballLoading && !basketballLoading && !volleyballLoading && !futsalLoading
-    var currentLocation by remember { mutableStateOf<Location?>(null) }
+    //var currentLocation by remember { mutableStateOf<Location?>(null) }
+    var currentLocation = remember { mutableStateOf<Location?>(null) }
     val gpsIsOnline = remember { mutableStateOf(false) }
-    val filterDistance = remember { mutableStateOf("max") }
+    val filterDistance = remember { mutableStateOf("1km") } //"max"
     val showDialog = remember { mutableStateOf(false) }
     val showSearchBar = remember { mutableStateOf(true) }
     val showSearchBarRecomendations = remember { mutableStateOf(false) }
@@ -120,11 +126,13 @@ fun MapScreen(
     val selectedTimeFilter = remember { mutableStateOf("today") }
     val currentSearch by remember { mutableStateOf<MutableList<Events>?>(mutableListOf()) }
     val sportsToShow by remember { mutableStateOf(sportsToShow.toHashSet()/*Global.favSports.toHashSet()*/) }
+    val keyboardController by remember { mutableStateOf(LocalSoftwareKeyboardController)}
+    var isKeyboardVisible = remember { mutableStateOf(false) }
     GPSChecker(appContext) { gpsIsOnline2, loc ->
         if (gpsIsOnline2) {
             if (!gpsIsOnline.value) {
                 gpsIsOnline.value = gpsIsOnline2
-                if (loc != null) currentLocation = loc else gpsIsOnline.value = false
+                if (loc != null) currentLocation.value = loc else gpsIsOnline.value = false
             } else {
                 gpsIsOnline.value = gpsIsOnline2
             }
@@ -234,15 +242,15 @@ fun MapScreen(
 
     }
 
-    val lat: Double = currentLocation?.latitude ?: 0.0
-    val long: Double = currentLocation?.longitude ?: 0.0
+    val lat: Double = currentLocation.value?.latitude ?: 0.0
+    val long: Double = currentLocation.value?.longitude ?: 0.0
 
     cameraPositionState.position = CameraPosition.fromLatLngZoom(LatLng(lat, long), 15f)
 
     LaunchedEffect(currentLocation) {
         currentLocation?.let { location ->
-            val latitude = location.latitude
-            val longitude = location.longitude
+            val latitude = location.value?.latitude
+            val longitude = location.value?.longitude
             //Log.d("Loc", "($latitude, $longitude)")
         }
     }
@@ -268,7 +276,7 @@ fun MapScreen(
                 .onEach { location ->
                     // evita que a camera seja puxada para a nossa loc a cada x tempo
                     if (bol) {
-                        currentLocation = location
+                        currentLocation.value = location
                         gpsIsOnline.value = true
                         bol = false
                     }
@@ -316,8 +324,12 @@ fun MapScreen(
                 showSearchBarRecomendations.value = false
                 showSearchBar.value = true
                 showDialog.value = false
+                if(isKeyboardVisible.value) isKeyboardVisible.value = false
             },
         ) {
+            if (isKeyboardVisible.value) {
+                keyboardController.current?.hide()
+            }
             // remove marker window on map drag
             if (cameraPositionState.cameraMoveStartedReason == CameraMoveStartedReason.GESTURE) {
                 showSearchBar.value = true
@@ -330,7 +342,7 @@ fun MapScreen(
             if (!footballLoading && !handballLoading && !basketballLoading && !volleyballLoading && !futsalLoading) {
                 markers.clear()
                 existingMarkers.clear()
-                Log.d("filtered events mapa", filteredEvents?.size.toString())
+                Log.d("filtered events map", filteredEvents?.size.toString())
                 Events.getEventsWithTimeFilter(
                     allEvents,
                     filteredEvents,
@@ -402,7 +414,9 @@ fun MapScreen(
                 lat = lat,
                 long = long,
                 showDialog = showDialog,
-                showSearchBar = showSearchBar
+                showSearchBar = showSearchBar,
+                appContext = appContext,
+                currentLocation = currentLocation
             )
             Column {
                 AutoComplete(
@@ -627,8 +641,12 @@ fun CenterUserPositionBox(
     lat: Double,
     long: Double,
     showDialog: MutableState<Boolean>,
-    showSearchBar: MutableState<Boolean>
+    showSearchBar: MutableState<Boolean>,
+    appContext: Context,
+    currentLocation : MutableState<Location?>
+
 ) {
+
     val lightBlueColor = Color(0xFF4A89f3)
     Box(Modifier.fillMaxSize()) {
         Box(modifier = Modifier
@@ -637,10 +655,13 @@ fun CenterUserPositionBox(
             .size(65.dp)
             .background(lightBlueColor, shape = CircleShape)
             .clickable(interactionSource = MutableInteractionSource(), indication = null) {
-                cameraPositionState.position =
-                    CameraPosition.fromLatLngZoom(LatLng(lat, long), 15f)
-                showSearchBar.value = true
-                showDialog.value = false
+                getNewUserPosition(appContext,currentLocation) {
+                    cameraPositionState.position =
+                        CameraPosition.fromLatLngZoom(LatLng(it.latitude, it.longitude), 15f)
+                    showSearchBar.value = true
+                    showDialog.value = false
+                }
+
             }
         ) {
             Image(
@@ -651,6 +672,28 @@ fun CenterUserPositionBox(
                     .align(Alignment.Center)
             )
         }
+    }
+}
+
+fun getNewUserPosition(appContext: Context, currentLocation: MutableState<Location?>, onFinished: (Location) -> Unit) {
+    val locationClient = DefaultLocationClient(
+        appContext,
+        LocationServices.getFusedLocationProviderClient(appContext)
+    )
+
+    CoroutineScope(Dispatchers.IO).launch {
+        var bol = true
+        locationClient.getLocationUpdates(100L)
+            .catch { it.printStackTrace() }
+            .onEach { location ->
+                if (bol) {
+                    currentLocation.value = location
+                    bol = false
+                    withContext(Dispatchers.Main){
+                        onFinished(location)
+                    }
+                }
+            }.launchIn(this)
     }
 }
 

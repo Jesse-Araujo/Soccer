@@ -1,4 +1,4 @@
-package com.example.sports.weather
+package com.example.sports.apis
 
 import android.os.Build
 import androidx.compose.runtime.MutableState
@@ -39,7 +39,7 @@ class Weather(
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
             val currentDate = LocalDate.now()
             when {
-                date.toLocalDate() == currentDate ->getTodayWeather(lat,lng,uiVar)
+                date.toLocalDate() == currentDate -> getTodayWeather(lat,lng,uiVar)
                 date.toLocalDate() == currentDate.plusDays(1) -> get5dayForecast(lat,lng,1,uiVar)
                 date.toLocalDate() == currentDate.plusDays(2) -> get5dayForecast(lat,lng,2,uiVar)
                 date.toLocalDate() == currentDate.plusDays(3) -> get5dayForecast(lat,lng,3,uiVar)
@@ -127,7 +127,7 @@ class Weather(
                 } catch (e: Exception) {
                     withContext(Dispatchers.Main) {
                         //Log.d("deu F",e.printStackTrace().toString())
-                        onFinished.value = Weather(0.0,WeatherType.ERROR,0.0,0.0)
+                        onFinished.value = Weather(0.0, WeatherType.ERROR,0.0,0.0)
                     }
                 }
             }

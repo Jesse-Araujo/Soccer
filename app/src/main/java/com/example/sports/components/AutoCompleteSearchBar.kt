@@ -121,7 +121,7 @@ fun AutoComplete(
                         ),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Text,
-                            imeAction = ImeAction.Done
+                            imeAction = ImeAction.Done,
                         ),
                         singleLine = true,
                         trailingIcon = {

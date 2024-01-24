@@ -212,7 +212,7 @@ class FirebaseFunctions {
                 override fun onDataChange(dataSnapshot: DataSnapshot) {
                     val favSports = hashSetOf<String>()
                     for (snapshot in dataSnapshot.children) {
-                        Log.d("snapshot", snapshot.toString())
+                        //Log.d("snapshot", snapshot.toString())
                         //if(snapshot.key != Global.userID.txt) continue
                         Log.d("user sports", snapshot.toString())
                         Log.d("user sports", snapshot.children.toString())
