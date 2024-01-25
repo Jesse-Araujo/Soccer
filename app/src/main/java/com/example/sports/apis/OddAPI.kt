@@ -18,13 +18,6 @@ class OddAPI {
 
         fun getOdds(uiVal: MutableState<Pair<String, String>>, event: Events, apiUrl : String, fullUrl:String) {
 
-            //TODO tirar isto
-            Log.d("odds", "poupar api")
-            uiVal.value = Pair("xiu","xiu")
-            event.homeOdd = "xiu"
-            event.awayOdd = "xiu"
-            return
-
             val bookmaker = 6
 
             val apiKey = "d0e33784e246dddf42f91ba3633549b8"

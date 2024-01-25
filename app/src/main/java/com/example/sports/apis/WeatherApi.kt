@@ -34,8 +34,7 @@ class Weather(
         fun getWeather(
             date: LocalDateTime, lat: Double, lng: Double, uiVar: MutableState<Weather>
         ) {
-            //TODO tirar isto, é so para poupar calls
-            return
+
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
             val currentDate = LocalDate.now()
             when {

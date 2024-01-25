@@ -358,10 +358,10 @@ fun UserReview(
                         comment.value = it
                     }
                 },
-                keyboardOptions = KeyboardOptions(
+                /*keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Text,
                     imeAction = ImeAction.Done,
-                ),
+                ),*/
                 maxLines = 5,
                 modifier = Modifier
                     .fillMaxWidth()
